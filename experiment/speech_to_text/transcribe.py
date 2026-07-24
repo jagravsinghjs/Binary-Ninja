@@ -35,6 +35,8 @@ segments, info = model.transcribe(
     beam_size=5
 )
 
+segments = list(segments)
+
 print("=" * 60)
 print(f"Language : {info.language}")
 print(f"Confidence : {info.language_probability:.2f}")
@@ -62,21 +64,30 @@ import json
 
 transcript = []
 
-for segment in segments:
-    line = (
-        f"[{segment.start:.2f}s - {segment.end:.2f}s] "
-        f"{segment.text.strip()}"
-    )
+OUTPUT_PATH.parent.mkdir(exist_ok=True)
 
-    print(line)
+with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
 
-    transcript.append({
-        "start": round(segment.start, 2),
-        "end": round(segment.end, 2),
-        "text": segment.text.strip()
-    })
+    for segment in segments:
 
-# Save JSON
+        line = (
+            f"[{segment.start:.2f}s - "
+            f"{segment.end:.2f}s] "
+            f"{segment.text.strip()}"
+        )
+
+        print(line)
+        f.write(line + "\n")
+
+        transcript.append({
+            "start": round(segment.start, 2),
+            "end": round(segment.end, 2),
+            "text": segment.text.strip()
+        })
+
+print("\nTranscript saved to:")
+print(OUTPUT_PATH)
+
 json_path = OUTPUT_PATH.parent / "transcript.json"
 
 with open(json_path, "w", encoding="utf-8") as f:

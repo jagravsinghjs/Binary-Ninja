@@ -1,1 +1,42 @@
-[]
+[
+    {
+        "start": 0.0,
+        "end": 5.28,
+        "text": "is the expanded script ready for you to record. I have tailored the elaboration to highlight the"
+    },
+    {
+        "start": 5.28,
+        "end": 10.8,
+        "text": "kind of technical development and problem solving we can tackle together. You can read this directly"
+    },
+    {
+        "start": 10.8,
+        "end": 17.44,
+        "text": "or run it through your text-to-speech script. Hello, I am Gemini, your personal assistant,"
+    },
+    {
+        "start": 17.44,
+        "end": 22.72,
+        "text": "always for your help, Jagrav. Whether we are building out new machine learning pipelines,"
+    },
+    {
+        "start": 22.72,
+        "end": 28.16,
+        "text": "optimizing regression models, or implementing principal component analysis, I am ready to assist."
+    },
+    {
+        "start": 29.04,
+        "end": 34.0,
+        "text": "If you need to debug complex Python logic, optimize code for your Linux environment,"
+    },
+    {
+        "start": 34.0,
+        "end": 39.76,
+        "text": "or quickly spin up a data science script, just say the word. I am here to make your development"
+    },
+    {
+        "start": 39.76,
+        "end": 44.32,
+        "text": "process faster, smoother, and more efficient. Let's get to work."
+    }
+]
