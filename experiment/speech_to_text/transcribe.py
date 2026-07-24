@@ -57,3 +57,29 @@ with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
 
 print("\nTranscript saved to:")
 print(OUTPUT_PATH)
+
+import json
+
+transcript = []
+
+for segment in segments:
+    line = (
+        f"[{segment.start:.2f}s - {segment.end:.2f}s] "
+        f"{segment.text.strip()}"
+    )
+
+    print(line)
+
+    transcript.append({
+        "start": round(segment.start, 2),
+        "end": round(segment.end, 2),
+        "text": segment.text.strip()
+    })
+
+# Save JSON
+json_path = OUTPUT_PATH.parent / "transcript.json"
+
+with open(json_path, "w", encoding="utf-8") as f:
+    json.dump(transcript, f, indent=4, ensure_ascii=False)
+
+print(f"\nJSON saved to: {json_path}")
