@@ -1,18 +1,19 @@
 # Voice Emotion Module
 
-Extracts acoustic audio features (pitch, energy, spectral dynamics) across conversation turns using signal processing algorithms.
+Processes a single audio file/transcript turn to extract acoustic features and compile single-run analysis.
 
 ## DFD Level 0
 
-[ Input: audio/test.wav ]
+[ Input: Single Audio / Transcript File ]
        │
        ▼
-[ Algorithm: Librosa (Acoustic Feature Extraction) ]
+[ Process: Librosa Acoustic Feature Extraction ]
        │
        ▼
 [ Output: output/transcript_with_emotion.json ]
 
 ## Overview
-- **Input:** Raw audio file (`audio/test.wav`).
-- **Algorithm/Tool:** `Librosa` (heuristic signal processing algorithm for pitch, mean, std, and energy metrics).
-- **Output:** Structured JSON enriched with acoustic feature metrics per audio segment (`transcript_with_emotion.json`).
+- **Execution:** Single-file execution model.
+- **Input:** Standalone audio recording (`audio/test.wav`) or transcript file.
+- **Algorithm:** `Librosa` (heuristic signal processing for pitch, energy, and speech dynamics).
+- **Output:** Feature-enriched JSON file containing acoustic metrics for report generation.
