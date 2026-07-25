@@ -1,0 +1,24 @@
+{
+    "turns": [
+        {
+            "turn_index": 0,
+            "distress_score": 7,
+            "note": "Patient expresses significant stress and sleep issues.",
+            "elapsed_seconds": 29.8
+        },
+        {
+            "turn_index": 1,
+            "distress_score": 8,
+            "note": "Patient mentions breakup and multiple stressful events, showing increasing distress.",
+            "elapsed_seconds": 87.0
+        },
+        {
+            "turn_index": 2,
+            "distress_score": 9,
+            "note": "Clear expression of deep sadness and depression",
+            "elapsed_seconds": 153.7
+        }
+    ],
+    "clinician_summary": "The patient has been experiencing a high level of stress and emotional strain over the past few days. They have faced multiple challenges including work deadlines, a recent breakup, and are struggling with sleep and feelings of depression. It may be worth discussing strategies for managing these pressures and considering support resources.",
+    "patient_message": "Hey, I\u2019ve had some tough weeks but it\u2019s good to talk about them \ud83d\ude4f. Thanks for listening \ud83c\udffc If this keeps building, it could help to flag it with your doctor too."
+}

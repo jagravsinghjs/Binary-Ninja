@@ -1,0 +1,30 @@
+{
+    "turns": [
+        {
+            "turn_index": 0,
+            "distress_score": 2,
+            "note": "Neutral tone and emotion",
+            "elapsed_seconds": 11.6
+        },
+        {
+            "turn_index": 1,
+            "distress_score": 5,
+            "note": "Increased pitch variability and anger",
+            "elapsed_seconds": 61.2
+        },
+        {
+            "turn_index": 2,
+            "distress_score": 3,
+            "note": "High joy with some surprise",
+            "elapsed_seconds": 88.5
+        },
+        {
+            "turn_index": 3,
+            "distress_score": 4,
+            "note": "Mixed emotions with fear and anger",
+            "elapsed_seconds": 111.0
+        }
+    ],
+    "clinician_summary": "The patient started the conversation in a neutral state but showed signs of mild distress as indicated by an increase in pitch variability and emotion scores. They expressed both positive and negative emotions, including joy, surprise, anger, and fear. Notable is the fluctuation between high and low emotional states, suggesting a potentially complex internal experience.",
+    "patient_message": "Hai bhaagbhav! \ud83d\ude4f\ud83c\udffc It's been tough but also some good times too. Let's catch up next time with more updates. \ud83d\udcc5"
+}
