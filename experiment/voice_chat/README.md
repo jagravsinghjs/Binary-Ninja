@@ -1,18 +1,18 @@
-# Voice Chat / Emotion Module
+# Voice Emotion Module
 
-Analyzes input transcript segments to detect emotional tones across conversation turns.
+Extracts acoustic audio features (pitch, energy, dynamics) across conversation turns using signal processing algorithms.
 
 ## DFD Level 0
 
-[ Input: input/transcript.json ]
+[ Input: audio/test.wav ]
        │
        ▼
-[ Model: j-hartmann/emotion-english-distilroberta-base ]
+[ Algorithm: Librosa (Acoustic Feature Extraction) ]
        │
        ▼
 [ Output: output/transcript_with_emotion.json ]
 
 ## Overview
-- **Input:** Segmented transcript (`input/transcript.json`).
-- **Model:** HuggingFace `j-hartmann/emotion-english-distilroberta-base` classification pipeline.
-- **Output:** JSON file updated with emotion confidence distributions per transcript chunk (`transcript_with_emotion.json`).
+- **Input:** Audio recording (`audio/test.wav`).
+- **Algorithm/Tool:** `Librosa` (heuristic signal processing algorithm for pitch, std, and energy).
+- **Output:** Structured JSON enriched with acoustic feature metrics per audio segment (`transcript_with_emotion.json`).
