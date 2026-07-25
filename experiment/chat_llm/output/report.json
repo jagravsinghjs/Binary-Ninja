@@ -2,29 +2,53 @@
     "segments": [
         {
             "start": 0.0,
-            "end": 7.4,
-            "distress_score": 3,
-            "note": "Initial reflection on relationship end, mild distress"
-        },
-        {
-            "start": 7.4,
-            "end": 15.1,
+            "end": 5.28,
             "distress_score": 2,
-            "note": "Concerns about parents' reaction, neutral tone"
+            "note": "Neutral tone and pacing"
         },
         {
-            "start": 15.1,
-            "end": 22.8,
+            "start": 5.28,
+            "end": 10.8,
+            "distress_score": 3,
+            "note": "Still neutral but slight increase in pitch variability"
+        },
+        {
+            "start": 10.8,
+            "end": 17.44,
             "distress_score": 4,
-            "note": "Feeling awkward around friends, mild anxiety"
+            "note": "Pitch and energy slightly rise, more focused tone"
         },
         {
-            "start": 22.8,
-            "end": 30.5,
+            "start": 17.44,
+            "end": 22.72,
+            "distress_score": 3,
+            "note": "Neutral but some pause ratio increase indicating hesitance"
+        },
+        {
+            "start": 22.72,
+            "end": 28.16,
+            "distress_score": 4,
+            "note": "Tone remains neutral but slightly more energy and pitch variability"
+        },
+        {
+            "start": 29.04,
+            "end": 34.0,
+            "distress_score": 5,
+            "note": "Pitch significantly increases with more energy"
+        },
+        {
+            "start": 34.0,
+            "end": 39.76,
             "distress_score": 6,
-            "note": "Overwhelmed by solitude and reflection, low energy"
+            "note": "Energy and pitch rise further; some urgency in tone"
+        },
+        {
+            "start": 39.76,
+            "end": 44.32,
+            "distress_score": 5,
+            "note": "Highest energy and pitch yet; focused but slightly anxious"
         }
     ],
-    "clinician_summary": "The patient started with neutral reflections on the relationship end but showed increasing distress as they spoke more about the impact on their social circle and feelings of isolation.",
-    "patient_message": "It sounds like you're carrying a lot \ud83d\ude25 right now. It\u2019s okay to feel overwhelmed, especially when it feels like no one understands or can help. You\u2019re handling this really well \ud83d\udcaa. Maybe try writing down your thoughts tonight instead of keeping them in your head? If this keeps building, it could help to flag it with your doctor too."
+    "clinician_summary": "The patient started with a neutral tone, gradually becoming more engaged and slightly anxious by the end of the session.",
+    "patient_message": "It sounds like you\u2019re ready to tackle some tough coding challenges today \ud83d\ude25. Let\u2019s break them down step-by-step together. You\u2019ve got this! \ud83d\udcaa If this keeps building, it could help to flag it with your doctor too."
 }

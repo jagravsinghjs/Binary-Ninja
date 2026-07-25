@@ -1,62 +1,122 @@
 [
     {
         "start": 0.0,
-        "end": 7.4,
-        "text": "So, things ended with Riya last week. I keep replaying it in my head, like there was maybe something I could've said differently.",
+        "end": 5.28,
+        "text": "is the expanded script ready for you to record. I have tailored the elaboration to highlight the",
         "acoustic_features": {
-            "pitch_mean_hz": 195.3,
-            "pitch_std_hz": 29.8,
-            "energy_mean": 0.052,
-            "energy_std": 0.028,
-            "zero_crossing_rate": 0.036,
-            "spectral_centroid": 1340.7,
-            "pause_ratio": 0.44
+            "pitch_mean_hz": 427.56,
+            "pitch_std_hz": 248.96,
+            "energy_mean": 0.0747,
+            "energy_std": 0.0928,
+            "zero_crossing_rate": 0.0391,
+            "spectral_centroid": 1498.12,
+            "pause_ratio": 0.43
         },
         "arousal_label": "neutral"
     },
     {
-        "start": 7.4,
-        "end": 15.1,
-        "text": "I haven't really told my parents, they wouldn't get it, they were never really okay with the relationship in the first place, so there's no point bringing it up.",
+        "start": 5.28,
+        "end": 10.8,
+        "text": "kind of technical development and problem solving we can tackle together. You can read this directly",
         "acoustic_features": {
-            "pitch_mean_hz": 188.6,
-            "pitch_std_hz": 25.4,
-            "energy_mean": 0.047,
-            "energy_std": 0.023,
-            "zero_crossing_rate": 0.031,
-            "spectral_centroid": 1260.5,
-            "pause_ratio": 0.49
+            "pitch_mean_hz": 434.31,
+            "pitch_std_hz": 235.54,
+            "energy_mean": 0.0668,
+            "energy_std": 0.0883,
+            "zero_crossing_rate": 0.0348,
+            "spectral_centroid": 1381.53,
+            "pause_ratio": 0.478
         },
         "arousal_label": "neutral"
     },
     {
-        "start": 15.1,
-        "end": 22.8,
-        "text": "Most of my friends are actually her friends too, from college, so it's kind of awkward to even bring it up to them, feels like picking a side.",
+        "start": 10.8,
+        "end": 17.44,
+        "text": "or run it through your text-to-speech script. Hello, I am Gemini, your personal assistant,",
         "acoustic_features": {
-            "pitch_mean_hz": 179.2,
-            "pitch_std_hz": 22.1,
-            "energy_mean": 0.041,
-            "energy_std": 0.019,
-            "zero_crossing_rate": 0.028,
-            "spectral_centroid": 1180.3,
-            "pause_ratio": 0.52
+            "pitch_mean_hz": 314.54,
+            "pitch_std_hz": 254.57,
+            "energy_mean": 0.0591,
+            "energy_std": 0.0797,
+            "zero_crossing_rate": 0.0426,
+            "spectral_centroid": 1604.27,
+            "pause_ratio": 0.547
         },
-        "arousal_label": "low_arousal"
+        "arousal_label": "neutral"
     },
     {
-        "start": 22.8,
-        "end": 30.5,
-        "text": "So it's mostly just been me, in my room, at night, kind of going over everything on my own. It's a lot to carry by myself, honestly.",
+        "start": 17.44,
+        "end": 22.72,
+        "text": "always for your help, Jagrav. Whether we are building out new machine learning pipelines,",
         "acoustic_features": {
-            "pitch_mean_hz": 183.9,
-            "pitch_std_hz": 27.6,
-            "energy_mean": 0.044,
-            "energy_std": 0.022,
-            "zero_crossing_rate": 0.030,
-            "spectral_centroid": 1210.8,
-            "pause_ratio": 0.55
+            "pitch_mean_hz": 219.3,
+            "pitch_std_hz": 176.49,
+            "energy_mean": 0.0661,
+            "energy_std": 0.0718,
+            "zero_crossing_rate": 0.0359,
+            "spectral_centroid": 1368.5,
+            "pause_ratio": 0.368
         },
-        "arousal_label": "low_arousal"
+        "arousal_label": "neutral"
+    },
+    {
+        "start": 22.72,
+        "end": 28.16,
+        "text": "optimizing regression models, or implementing principal component analysis, I am ready to assist.",
+        "acoustic_features": {
+            "pitch_mean_hz": 363.09,
+            "pitch_std_hz": 217.89,
+            "energy_mean": 0.0695,
+            "energy_std": 0.0766,
+            "zero_crossing_rate": 0.0524,
+            "spectral_centroid": 1760.12,
+            "pause_ratio": 0.308
+        },
+        "arousal_label": "neutral"
+    },
+    {
+        "start": 29.04,
+        "end": 34.0,
+        "text": "If you need to debug complex Python logic, optimize code for your Linux environment,",
+        "acoustic_features": {
+            "pitch_mean_hz": 542.32,
+            "pitch_std_hz": 174.96,
+            "energy_mean": 0.078,
+            "energy_std": 0.0993,
+            "zero_crossing_rate": 0.0402,
+            "spectral_centroid": 1507.68,
+            "pause_ratio": 0.456
+        },
+        "arousal_label": "neutral"
+    },
+    {
+        "start": 34.0,
+        "end": 39.76,
+        "text": "or quickly spin up a data science script, just say the word. I am here to make your development",
+        "acoustic_features": {
+            "pitch_mean_hz": 436.89,
+            "pitch_std_hz": 219.84,
+            "energy_mean": 0.0721,
+            "energy_std": 0.09,
+            "zero_crossing_rate": 0.0441,
+            "spectral_centroid": 1598.14,
+            "pause_ratio": 0.396
+        },
+        "arousal_label": "neutral"
+    },
+    {
+        "start": 39.76,
+        "end": 44.32,
+        "text": "process faster, smoother, and more efficient. Let's get to work.",
+        "acoustic_features": {
+            "pitch_mean_hz": 385.38,
+            "pitch_std_hz": 241.46,
+            "energy_mean": 0.0782,
+            "energy_std": 0.0991,
+            "zero_crossing_rate": 0.0471,
+            "spectral_centroid": 1708.97,
+            "pause_ratio": 0.461
+        },
+        "arousal_label": "neutral"
     }
 ]
