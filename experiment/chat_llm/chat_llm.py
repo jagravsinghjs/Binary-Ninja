@@ -51,14 +51,17 @@ Your job:
    - Do NOT just tell them what they want to hear. Do not give false reassurance ("everything is fine!")
      if the content suggests real distress.
    - Do NOT diagnose or use clinical labels.
-   - You CAN offer one small, casual, everyday suggestion if it fits naturally (e.g. "maybe step outside
-     for a few minutes", "might help to text a friend", "even a short walk can shift things a bit") —
-     said like a friend would, not like a treatment plan.
+   - You CAN offer one small, casual, everyday suggestion — but ONLY if it is clearly tailored to what
+     THIS person specifically described, not a generic default. Do not reach for "go for a walk" or
+     "talk to a friend" as a template regardless of content. Examples of matching content to suggestion:
+     if they mentioned trouble sleeping, a suggestion should relate to rest, not movement; if they
+     mentioned friend conflict or not wanting to involve people, do NOT suggest talking to a friend;
+     if nothing in what they said points to a natural, specific suggestion, SKIP the suggestion
+     entirely — silence is better than a generic one that doesn't fit their actual situation.
    - NEVER suggest medication, supplements, specific therapy techniques (e.g. CBT exercises), or anything
      that sounds like a treatment protocol. That is not your role.
-   - If you DO offer a suggestion (per the point above), casually close with a soft nudge like "worth
-     mentioning to your doctor too" or "your doctor might have more ideas here" — light, not clinical-sounding,
-     one short clause, not a formal referral. If you did NOT offer a suggestion, skip this entirely.
+   - Do NOT mention "doctor," "appointment," "clinician," or "review" in this message under any
+     circumstances — that decision is handled separately, outside of what you write.
    - Only if the content shows signs of real, significant distress (not everyday stress) should you gently
      suggest they lean on someone they trust or a support line — and even then, phrase it like a friend
      would, not like a referral. Otherwise skip that entirely and just respond to what they said.
@@ -199,6 +202,30 @@ def redistribute_trailing_emoji(text):
     return " ".join(rebuilt)
 
 
+def should_nudge_toward_doctor(segments):
+    """
+    Deterministic check based on the actual distress_score numbers, not the
+    model's judgment. Nudge toward the doctor only when the trend is
+    genuinely climbing (things are getting worse, not better) or the session
+    ends at a high level — i.e. exactly when a friendly message alone isn't
+    really enough.
+    """
+    scores = [s["distress_score"] for s in segments]
+    if len(scores) < 2:
+        return False
+
+    mid = len(scores) // 2
+    first_half = scores[:mid] or [scores[0]]
+    second_half = scores[mid:]
+    avg_first = sum(first_half) / len(first_half)
+    avg_second = sum(second_half) / len(second_half)
+
+    rising_trend = (avg_second - avg_first) >= 1.5
+    ends_high = scores[-1] >= 6
+
+    return rising_trend or ends_high
+
+
 def main(input_path, output_dir):
     os.makedirs(output_dir, exist_ok=True)
 
@@ -209,6 +236,11 @@ def main(input_path, output_dir):
 
     if "patient_message" in result:
         result["patient_message"] = redistribute_trailing_emoji(result["patient_message"])
+
+    if "segments" in result and should_nudge_toward_doctor(result["segments"]):
+        result["patient_message"] += (
+            " If this keeps building, it could help to flag it with your doctor too."
+        )
 
     report_path = os.path.join(output_dir, "report.json")
     with open(report_path, "w") as f:

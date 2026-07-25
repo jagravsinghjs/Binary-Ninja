@@ -2,29 +2,29 @@
     "segments": [
         {
             "start": 0.0,
-            "end": 6.5,
-            "distress_score": 7,
-            "note": "Initial panic attack described, high pitch and energy variability."
-        },
-        {
-            "start": 6.5,
-            "end": 13.2,
-            "distress_score": 5,
-            "note": "Some relief noted after using breathing techniques, lower arousal but still elevated."
-        },
-        {
-            "start": 13.2,
-            "end": 20.4,
+            "end": 7.4,
             "distress_score": 3,
-            "note": "Improvement in mood and activities engagement noted, more settled tone."
+            "note": "Initial reflection on relationship end, mild distress"
         },
         {
-            "start": 20.4,
-            "end": 27.8,
+            "start": 7.4,
+            "end": 15.1,
             "distress_score": 2,
-            "note": "Current state of mild fatigue but improved from initial panic, low arousal."
+            "note": "Concerns about parents' reaction, neutral tone"
+        },
+        {
+            "start": 15.1,
+            "end": 22.8,
+            "distress_score": 4,
+            "note": "Feeling awkward around friends, mild anxiety"
+        },
+        {
+            "start": 22.8,
+            "end": 30.5,
+            "distress_score": 6,
+            "note": "Overwhelmed by solitude and reflection, low energy"
         }
     ],
-    "clinician_summary": "The patient started the session with high distress due to a recent panic attack, which improved by Wednesday as they engaged in activities like walking. They currently feel mostly okay, though still slightly fatigued.",
-    "patient_message": "Wow, you had quite a rollercoaster this week but look at how far you've come already! \ud83e\udd2f\u200d\u26a1 By taking breaks and doing what you love, you're showing just how strong you are \ud83d\udcaa. Keep up the good work."
+    "clinician_summary": "The patient started with neutral reflections on the relationship end but showed increasing distress as they spoke more about the impact on their social circle and feelings of isolation.",
+    "patient_message": "It sounds like you're carrying a lot \ud83d\ude25 right now. It\u2019s okay to feel overwhelmed, especially when it feels like no one understands or can help. You\u2019re handling this really well \ud83d\udcaa. Maybe try writing down your thoughts tonight instead of keeping them in your head? If this keeps building, it could help to flag it with your doctor too."
 }

@@ -1,62 +1,62 @@
 [
     {
         "start": 0.0,
-        "end": 6.5,
-        "text": "Okay so, honestly the start of this week was rough, I had a panic attack on Monday before my presentation, first one in a while.",
+        "end": 7.4,
+        "text": "So, things ended with Riya last week. I keep replaying it in my head, like there was maybe something I could've said differently.",
         "acoustic_features": {
-            "pitch_mean_hz": 232.8,
-            "pitch_std_hz": 47.3,
-            "energy_mean": 0.092,
-            "energy_std": 0.051,
-            "zero_crossing_rate": 0.061,
-            "spectral_centroid": 1850.4,
-            "pause_ratio": 0.16
-        },
-        "arousal_label": "high_arousal"
-    },
-    {
-        "start": 6.5,
-        "end": 13.2,
-        "text": "It scared me a bit, I hadn't had one that intense in months, but I used the breathing thing we talked about and it did help some.",
-        "acoustic_features": {
-            "pitch_mean_hz": 221.6,
-            "pitch_std_hz": 39.8,
-            "energy_mean": 0.078,
-            "energy_std": 0.042,
-            "zero_crossing_rate": 0.054,
-            "spectral_centroid": 1730.1,
-            "pause_ratio": 0.24
-        },
-        "arousal_label": "high_arousal"
-    },
-    {
-        "start": 13.2,
-        "end": 20.4,
-        "text": "By Wednesday I was feeling a bit more like myself. Went for a walk, actually enjoyed it, which hasn't happened in a while.",
-        "acoustic_features": {
-            "pitch_mean_hz": 189.4,
-            "pitch_std_hz": 24.1,
-            "energy_mean": 0.058,
-            "energy_std": 0.027,
-            "zero_crossing_rate": 0.039,
-            "spectral_centroid": 1420.6,
-            "pause_ratio": 0.33
+            "pitch_mean_hz": 195.3,
+            "pitch_std_hz": 29.8,
+            "energy_mean": 0.052,
+            "energy_std": 0.028,
+            "zero_crossing_rate": 0.036,
+            "spectral_centroid": 1340.7,
+            "pause_ratio": 0.44
         },
         "arousal_label": "neutral"
     },
     {
-        "start": 20.4,
-        "end": 27.8,
-        "text": "And today I actually feel pretty okay, honestly. Still tired, but the tight chest feeling from Monday hasn't really come back.",
+        "start": 7.4,
+        "end": 15.1,
+        "text": "I haven't really told my parents, they wouldn't get it, they were never really okay with the relationship in the first place, so there's no point bringing it up.",
         "acoustic_features": {
-            "pitch_mean_hz": 175.2,
-            "pitch_std_hz": 18.6,
-            "energy_mean": 0.049,
-            "energy_std": 0.021,
-            "zero_crossing_rate": 0.032,
-            "spectral_centroid": 1280.3,
-            "pause_ratio": 0.38
+            "pitch_mean_hz": 188.6,
+            "pitch_std_hz": 25.4,
+            "energy_mean": 0.047,
+            "energy_std": 0.023,
+            "zero_crossing_rate": 0.031,
+            "spectral_centroid": 1260.5,
+            "pause_ratio": 0.49
         },
         "arousal_label": "neutral"
+    },
+    {
+        "start": 15.1,
+        "end": 22.8,
+        "text": "Most of my friends are actually her friends too, from college, so it's kind of awkward to even bring it up to them, feels like picking a side.",
+        "acoustic_features": {
+            "pitch_mean_hz": 179.2,
+            "pitch_std_hz": 22.1,
+            "energy_mean": 0.041,
+            "energy_std": 0.019,
+            "zero_crossing_rate": 0.028,
+            "spectral_centroid": 1180.3,
+            "pause_ratio": 0.52
+        },
+        "arousal_label": "low_arousal"
+    },
+    {
+        "start": 22.8,
+        "end": 30.5,
+        "text": "So it's mostly just been me, in my room, at night, kind of going over everything on my own. It's a lot to carry by myself, honestly.",
+        "acoustic_features": {
+            "pitch_mean_hz": 183.9,
+            "pitch_std_hz": 27.6,
+            "energy_mean": 0.044,
+            "energy_std": 0.022,
+            "zero_crossing_rate": 0.030,
+            "spectral_centroid": 1210.8,
+            "pause_ratio": 0.55
+        },
+        "arousal_label": "low_arousal"
     }
 ]
