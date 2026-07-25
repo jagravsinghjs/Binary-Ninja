@@ -364,12 +364,26 @@ def generate_report(db_turns):
         [{"role": "user", "content": user_content}], REPORT_SYSTEM_PROMPT, format_json=True
     )
 
+    if not raw.strip():
+        raise RuntimeError(
+            "Ollama returned an empty response generating the report — likely a timeout "
+            "or the model erroring mid-generation. Try ending the session again."
+        )
+
     cleaned = raw.strip()
     if cleaned.startswith("```"):
         cleaned = cleaned.strip("`")
         if cleaned.startswith("json"):
             cleaned = cleaned[4:]
-    result = json.loads(cleaned.strip())
+    cleaned = cleaned.strip()
+
+    try:
+        result = json.loads(cleaned)
+    except json.JSONDecodeError:
+        debug_path = os.path.join(tempfile.gettempdir(), "setu_last_raw_response.txt")
+        with open(debug_path, "w") as f:
+            f.write(raw)
+        raise RuntimeError(f"Ollama's report output wasn't valid JSON — raw output saved to {debug_path}")
 
     result["patient_message"] = redistribute_trailing_emoji(result["patient_message"])
 
