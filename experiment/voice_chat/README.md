@@ -1,18 +1,22 @@
-# Voice Chat / Acoustic Feature Module
+# Voice Chat Module
 
-Extracts acoustic audio metrics (pitch, energy, spectral dynamics) across conversation segments using signal processing algorithms.
+Executes an interactive chat loop across dynamic user turns, accumulating context until final report generation.
 
 ## DFD Level 0
 
-[ Input: audio/test.wav + input/transcript.json ]
+[ Input: Interactive User Audio Stream / Turns ]
        │
        ▼
-[ Algorithm: Librosa (Acoustic Feature Extraction) ]
+[ Process: Continuous Chat Loop (Librosa + Session State) ]
        │
        ▼
-[ Output: output/transcript_with_emotion.json ]
+[ Trigger: Report Generation Request ]
+       │
+       ▼
+[ Output: Session Report File (report.json) ]
 
 ## Overview
-- **Input:** Raw audio file (`audio/test.wav`) and generated transcript (`input/transcript.json` from `speech_to_text`).
-- **Algorithm/Tool:** Librosa (heuristic signal processing algorithm for pitch, mean, std, and energy metrics).
-- **Output:** Structured JSON enriched with acoustic feature metrics mapped to transcript segments (`transcript_with_emotion.json`).
+- **Execution:** Interactive continuous loop until user terminates/requests report.
+- **Input:** Live/sequential user voice audio inputs across conversation turns.
+- **Algorithm/Engine:** Turn-taking state manager with `Librosa` feature extraction per segment.
+- **Output:** Aggregated session state exported into a final report document upon loop completion.
