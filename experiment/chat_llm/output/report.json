@@ -1,0 +1,30 @@
+{
+    "segments": [
+        {
+            "start": 0.0,
+            "end": 6.5,
+            "distress_score": 7,
+            "note": "Initial panic attack described, high pitch and energy variability."
+        },
+        {
+            "start": 6.5,
+            "end": 13.2,
+            "distress_score": 5,
+            "note": "Some relief noted after using breathing techniques, lower arousal but still elevated."
+        },
+        {
+            "start": 13.2,
+            "end": 20.4,
+            "distress_score": 3,
+            "note": "Improvement in mood and activities engagement noted, more settled tone."
+        },
+        {
+            "start": 20.4,
+            "end": 27.8,
+            "distress_score": 2,
+            "note": "Current state of mild fatigue but improved from initial panic, low arousal."
+        }
+    ],
+    "clinician_summary": "The patient started the session with high distress due to a recent panic attack, which improved by Wednesday as they engaged in activities like walking. They currently feel mostly okay, though still slightly fatigued.",
+    "patient_message": "Wow, you had quite a rollercoaster this week but look at how far you've come already! \ud83e\udd2f\u200d\u26a1 By taking breaks and doing what you love, you're showing just how strong you are \ud83d\udcaa. Keep up the good work."
+}

@@ -1,0 +1,62 @@
+[
+    {
+        "start": 0.0,
+        "end": 6.5,
+        "text": "Okay so, honestly the start of this week was rough, I had a panic attack on Monday before my presentation, first one in a while.",
+        "acoustic_features": {
+            "pitch_mean_hz": 232.8,
+            "pitch_std_hz": 47.3,
+            "energy_mean": 0.092,
+            "energy_std": 0.051,
+            "zero_crossing_rate": 0.061,
+            "spectral_centroid": 1850.4,
+            "pause_ratio": 0.16
+        },
+        "arousal_label": "high_arousal"
+    },
+    {
+        "start": 6.5,
+        "end": 13.2,
+        "text": "It scared me a bit, I hadn't had one that intense in months, but I used the breathing thing we talked about and it did help some.",
+        "acoustic_features": {
+            "pitch_mean_hz": 221.6,
+            "pitch_std_hz": 39.8,
+            "energy_mean": 0.078,
+            "energy_std": 0.042,
+            "zero_crossing_rate": 0.054,
+            "spectral_centroid": 1730.1,
+            "pause_ratio": 0.24
+        },
+        "arousal_label": "high_arousal"
+    },
+    {
+        "start": 13.2,
+        "end": 20.4,
+        "text": "By Wednesday I was feeling a bit more like myself. Went for a walk, actually enjoyed it, which hasn't happened in a while.",
+        "acoustic_features": {
+            "pitch_mean_hz": 189.4,
+            "pitch_std_hz": 24.1,
+            "energy_mean": 0.058,
+            "energy_std": 0.027,
+            "zero_crossing_rate": 0.039,
+            "spectral_centroid": 1420.6,
+            "pause_ratio": 0.33
+        },
+        "arousal_label": "neutral"
+    },
+    {
+        "start": 20.4,
+        "end": 27.8,
+        "text": "And today I actually feel pretty okay, honestly. Still tired, but the tight chest feeling from Monday hasn't really come back.",
+        "acoustic_features": {
+            "pitch_mean_hz": 175.2,
+            "pitch_std_hz": 18.6,
+            "energy_mean": 0.049,
+            "energy_std": 0.021,
+            "zero_crossing_rate": 0.032,
+            "spectral_centroid": 1280.3,
+            "pause_ratio": 0.38
+        },
+        "arousal_label": "neutral"
+    }
+]
