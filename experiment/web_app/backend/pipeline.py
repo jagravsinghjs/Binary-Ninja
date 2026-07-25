@@ -8,7 +8,10 @@ what makes this safe across multiple concurrent users/sessions.
 """
 
 import json
+import os
 import re
+import subprocess
+import tempfile
 
 import edge_tts
 import numpy as np
@@ -18,16 +21,19 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-# librosa/audioread shell out to a system `ffmpeg` on PATH to decode
-# non-WAV formats (like the browser's .webm uploads). On Windows, conda
-# installs of ffmpeg have repeatedly failed to land on PATH even after a
-# terminal restart — so instead of depending on PATH at all, use
-# imageio-ffmpeg's bundled static binary and prepend its folder to PATH
-# for this process only. Deterministic, no admin rights, no PATH editing.
-import os
+# librosa/audioread need a system `ffmpeg` on PATH to decode non-WAV formats
+# (like the browser's .webm uploads) — and it specifically has to be a file
+# literally named `ffmpeg`/`ffmpeg.exe`, found via shutil.which(). Prepending
+# imageio-ffmpeg's bundled binary's folder to PATH doesn't work because that
+# binary has a versioned filename (e.g. ffmpeg-win-x86_64-v7.0.2.exe), not
+# `ffmpeg.exe` — so PATH lookup never finds it no matter where it sits.
+# Instead: call that exact binary directly via subprocess to convert the
+# upload to a plain .wav before anything else touches it. WAV needs no
+# ffmpeg at all — soundfile reads it natively. (Whisper was never actually
+# affected by this — faster-whisper decodes via its own bundled PyAV, not
+# system ffmpeg — only the acoustic-feature step needed this.)
 import imageio_ffmpeg
-_ffmpeg_dir = os.path.dirname(imageio_ffmpeg.get_ffmpeg_exe())
-os.environ["PATH"] = _ffmpeg_dir + os.pathsep + os.environ.get("PATH", "")
+FFMPEG_EXE = imageio_ffmpeg.get_ffmpeg_exe()
 
 from faster_whisper import WhisperModel
 from transformers import pipeline as hf_pipeline
@@ -184,24 +190,49 @@ def classify_arousal(features):
 # synchronous and GPU-bound, same as it was in the CLI)
 # ------------------------------------------------------------------
 
+def convert_to_wav(input_path):
+    """Converts any browser-uploaded audio (webm/ogg/whatever) to a plain
+    16kHz mono WAV by calling imageio-ffmpeg's exact binary path directly —
+    no PATH lookup, no shutil.which(), so it can't be broken by a filename
+    mismatch or a Windows PATH that didn't take. Caller is responsible for
+    deleting the returned path when done."""
+    fd, wav_path = tempfile.mkstemp(suffix=".wav")
+    os.close(fd)
+    cmd = [
+        FFMPEG_EXE, "-y", "-i", input_path,
+        "-ar", "16000", "-ac", "1", "-f", "wav", wav_path,
+    ]
+    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if result.returncode != 0:
+        os.remove(wav_path)
+        raise RuntimeError(
+            f"ffmpeg failed to convert uploaded audio: {result.stderr.decode(errors='replace')}"
+        )
+    return wav_path
+
+
 def process_turn(whisper_model, emotion_classifier, audio_path):
-    segments, info = whisper_model.transcribe(audio_path, beam_size=5)
-    text = " ".join(s.text.strip() for s in segments).strip()
-    if not text:
-        return None
+    wav_path = convert_to_wav(audio_path)
+    try:
+        segments, info = whisper_model.transcribe(wav_path, beam_size=5)
+        text = " ".join(s.text.strip() for s in segments).strip()
+        if not text:
+            return None
 
-    acoustic = extract_acoustic_features(audio_path)
-    arousal = classify_arousal(acoustic)
+        acoustic = extract_acoustic_features(wav_path)
+        arousal = classify_arousal(acoustic)
 
-    emotion_raw = emotion_classifier(text)[0]
-    text_emotion = {item["label"]: round(item["score"], 4) for item in emotion_raw}
+        emotion_raw = emotion_classifier(text)[0]
+        text_emotion = {item["label"]: round(item["score"], 4) for item in emotion_raw}
 
-    return {
-        "text": text,
-        "acoustic_features": acoustic,
-        "arousal_label": arousal,
-        "text_emotion": text_emotion,
-    }
+        return {
+            "text": text,
+            "acoustic_features": acoustic,
+            "arousal_label": arousal,
+            "text_emotion": text_emotion,
+        }
+    finally:
+        os.remove(wav_path)  # the converted copy never outlives this turn either
 
 
 def format_user_turn(turn):
