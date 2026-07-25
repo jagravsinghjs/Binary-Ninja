@@ -18,6 +18,17 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
+# librosa/audioread shell out to a system `ffmpeg` on PATH to decode
+# non-WAV formats (like the browser's .webm uploads). On Windows, conda
+# installs of ffmpeg have repeatedly failed to land on PATH even after a
+# terminal restart — so instead of depending on PATH at all, use
+# imageio-ffmpeg's bundled static binary and prepend its folder to PATH
+# for this process only. Deterministic, no admin rights, no PATH editing.
+import os
+import imageio_ffmpeg
+_ffmpeg_dir = os.path.dirname(imageio_ffmpeg.get_ffmpeg_exe())
+os.environ["PATH"] = _ffmpeg_dir + os.pathsep + os.environ.get("PATH", "")
+
 from faster_whisper import WhisperModel
 from transformers import pipeline as hf_pipeline
 
