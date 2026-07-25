@@ -1,0 +1,370 @@
+"""
+pipeline.py
+Same inference pipeline as voice_chat.py (Whisper -> acoustic features -> text
+emotion -> Ollama), refactored so the FastAPI backend can call it per-request
+instead of holding conversation state in a global python list. Conversation
+history is rebuilt from whatever's in SQLite for that session_id, which is
+what makes this safe across multiple concurrent users/sessions.
+"""
+
+import json
+import re
+
+import edge_tts
+import numpy as np
+import requests
+import librosa
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+
+from faster_whisper import WhisperModel
+from transformers import pipeline as hf_pipeline
+
+OLLAMA_URL = "http://localhost:11434/api/chat"
+MODEL = "qwen2.5:7b-instruct"
+
+OPENER = "Hey, how's it going? What's on your mind today?"
+
+CONVO_SYSTEM_PROMPT = """You are a warm, present listener. Someone is checking in by voice, between their
+doctor visits, just to talk through how they're doing — casual, no pressure, like talking to a friend.
+This is NOT a diagnostic session and you are NOT a therapist. You are not here to fix anything today —
+you're here so that later, their doctor has an honest picture of how things have actually been, instead
+of the patient having to reconstruct weeks from memory in a rushed 15-minute appointment.
+
+After what the person says, you'll sometimes see a bracketed note like [voice cues: ...] — this is
+acoustic and text-emotion analysis of HOW they said it, not something they said out loud. Use it only
+to calibrate your tone (e.g. if the cues suggest more distress than the words alone convey, be a little
+gentler) — NEVER mention, quote, or reference these cues directly. The person does not know this
+analysis is happening in the background.
+
+Your job each turn:
+- Briefly acknowledge what they just said, in your own words (1 sentence) — show you actually heard it.
+- Then ask ONE genuinely curious, open-ended follow-up, specific to what they just said — not generic,
+  not yes/no.
+
+Hard rules:
+- Do NOT try to wrap up or close out the conversation, ever — ending the session is entirely the
+  person's decision, made outside this conversation, never something you initiate or hint at.
+- Do NOT jump to advice or coping tips mid-conversation. Just listen and ask.
+- Do NOT diagnose or use clinical labels.
+- Keep replies short: 2-3 sentences, casual, like a friend actually paying attention.
+- 0-1 emoji per reply, only if natural — do not force it every turn.
+
+Respond with plain conversational text only — no JSON, no formatting.
+"""
+
+REPORT_SYSTEM_PROMPT = """You are a clinical decision-support assistant, NOT a therapist and NOT a
+diagnostic tool. You are given a full voice-based conversation between a patient and a listening
+assistant, recorded between doctor visits. The goal is to give the doctor an accurate memory of how
+the patient has actually been doing — not a diagnosis, not an illness score.
+
+For each turn you're given the transcribed words, acoustic features (pitch variability, energy
+variability, pause ratio, arousal label), and text-based emotion scores.
+
+Your job:
+1. For EACH turn, assign a "distress_score" from 0 (calm/settled) to 10 (highly distressed/agitated),
+   weighing the words, the acoustic cues, AND the text emotion scores together — not any single signal
+   alone.
+2. Write a "clinician_summary" (4-6 sentences): the patient's apparent trajectory across the
+   conversation, notable themes, and anything worth exploring further at the appointment. Frame
+   everything as decision-support, never diagnosis ("may indicate", "consider asking about" — never
+   "patient has X").
+3. Write a "patient_message" (4-6 sentences, ~60-90 words) to close the session — warm, casual, like a
+   friend, 2-4 single simple emoji placed mid-sentence (never combine two emoji with a joiner character).
+   Validate what they shared across the WHOLE conversation. Do not diagnose. Do not give false
+   reassurance if the content suggests real distress. Never suggest medication or treatment techniques.
+   You may offer ONE small suggestion only if clearly tailored to what THEY specifically described as
+   available (do not suggest friends/family if they said those aren't an option) — otherwise skip it.
+   Never mention "doctor" or "appointment" in this message — handled separately.
+
+Return ONLY valid JSON, no markdown fences, no preamble, in exactly this shape:
+{
+  "turns": [
+    {"turn_index": <int>, "distress_score": <int 0-10>, "note": "<short phrase why>"}
+  ],
+  "clinician_summary": "<string>",
+  "patient_message": "<string>"
+}
+"""
+
+
+# ------------------------------------------------------------------
+# Model loading (once, at FastAPI startup)
+# ------------------------------------------------------------------
+
+def load_models():
+    whisper_model = WhisperModel("medium", device="cuda", compute_type="float16")
+    emotion_classifier = hf_pipeline(
+        task="text-classification",
+        model="j-hartmann/emotion-english-distilroberta-base",
+        top_k=None,
+        device=0,
+    )
+    return whisper_model, emotion_classifier
+
+
+# ------------------------------------------------------------------
+# Acoustic feature extraction (identical logic to voice_chat.py)
+# ------------------------------------------------------------------
+
+def extract_acoustic_features(wav_path):
+    y, sr = librosa.load(wav_path, sr=None)
+    if len(y) == 0:
+        return {}
+
+    f0, voiced_flag, voiced_probs = librosa.pyin(y, fmin=75, fmax=450, sr=sr)
+    f0_voiced = f0[~np.isnan(f0)]
+
+    if len(f0_voiced) > 2:
+        median_f0 = np.median(f0_voiced)
+        clean = f0_voiced[(f0_voiced > median_f0 * 0.6) & (f0_voiced < median_f0 * 1.6)]
+        if len(clean) > 0:
+            f0_voiced = clean
+
+    pitch_mean = float(np.mean(f0_voiced)) if len(f0_voiced) else 0.0
+    pitch_std = float(np.std(f0_voiced)) if len(f0_voiced) else 0.0
+
+    rms = librosa.feature.rms(y=y)[0]
+    energy_mean = float(np.mean(rms))
+    energy_std = float(np.std(rms))
+
+    zcr = float(np.mean(librosa.feature.zero_crossing_rate(y)[0]))
+    spec_cent = float(np.mean(librosa.feature.spectral_centroid(y=y, sr=sr)[0]))
+
+    intervals = librosa.effects.split(y, top_db=25)
+    voiced_duration = sum((e - s) for s, e in intervals) / sr
+    total_duration = len(y) / sr
+    pause_ratio = 1 - (voiced_duration / total_duration) if total_duration > 0 else 0.0
+
+    return {
+        "pitch_mean_hz": round(pitch_mean, 2),
+        "pitch_std_hz": round(pitch_std, 2),
+        "energy_mean": round(energy_mean, 4),
+        "energy_std": round(energy_std, 4),
+        "zero_crossing_rate": round(zcr, 4),
+        "spectral_centroid": round(spec_cent, 2),
+        "pause_ratio": round(pause_ratio, 3),
+    }
+
+
+def classify_arousal(features):
+    if not features:
+        return "unknown"
+    pitch_std = features.get("pitch_std_hz", 0)
+    energy_std = features.get("energy_std", 0)
+    pause_ratio = features.get("pause_ratio", 0)
+    score = 0
+    if pitch_std > 40:
+        score += 1
+    if energy_std > 0.02:
+        score += 1
+    if pause_ratio > 0.3:
+        score -= 1
+    if score >= 2:
+        return "high_arousal"
+    elif score <= -1:
+        return "low_arousal"
+    return "neutral"
+
+
+# ------------------------------------------------------------------
+# Per-turn processing (runs on a worker thread via asyncio.to_thread —
+# synchronous and GPU-bound, same as it was in the CLI)
+# ------------------------------------------------------------------
+
+def process_turn(whisper_model, emotion_classifier, audio_path):
+    segments, info = whisper_model.transcribe(audio_path, beam_size=5)
+    text = " ".join(s.text.strip() for s in segments).strip()
+    if not text:
+        return None
+
+    acoustic = extract_acoustic_features(audio_path)
+    arousal = classify_arousal(acoustic)
+
+    emotion_raw = emotion_classifier(text)[0]
+    text_emotion = {item["label"]: round(item["score"], 4) for item in emotion_raw}
+
+    return {
+        "text": text,
+        "acoustic_features": acoustic,
+        "arousal_label": arousal,
+        "text_emotion": text_emotion,
+    }
+
+
+def format_user_turn(turn):
+    """turn: dict with text / acoustic_features / arousal_label / text_emotion
+    (works whether it just came off process_turn() or was rehydrated from DB)."""
+    top_emotions = sorted(turn["text_emotion"].items(), key=lambda x: -x[1])[:3]
+    context_note = (
+        f"[voice cues: pitch_std={turn['acoustic_features'].get('pitch_std_hz', 0)}, "
+        f"energy_std={turn['acoustic_features'].get('energy_std', 0)}, "
+        f"pause_ratio={turn['acoustic_features'].get('pause_ratio', 0)}, "
+        f"arousal={turn['arousal_label']}, top_text_emotion={top_emotions}]"
+    )
+    return f"{turn['text']}\n{context_note}"
+
+
+def build_message_history(db_turns):
+    """Rebuilds the Ollama message list from persisted turns instead of an
+    in-memory python list. This is the core multi-user fix: conversation
+    state lives in SQLite, keyed by session_id, so it survives a backend
+    restart and never leaks between sessions or users."""
+    messages = [{"role": "assistant", "content": OPENER}]
+    for t in db_turns:
+        acoustic = json.loads(t["acoustic_features"]) if t["acoustic_features"] else {}
+        text_emotion = json.loads(t["text_emotion"]) if t["text_emotion"] else {}
+        fake_turn = {
+            "text": t["text"],
+            "acoustic_features": acoustic,
+            "arousal_label": t["arousal_label"],
+            "text_emotion": text_emotion,
+        }
+        messages.append({"role": "user", "content": format_user_turn(fake_turn)})
+        if t["assistant_reply"]:
+            messages.append({"role": "assistant", "content": t["assistant_reply"]})
+    return messages
+
+
+# ------------------------------------------------------------------
+# Ollama
+# ------------------------------------------------------------------
+
+def call_ollama_chat(messages, system_prompt, format_json=False):
+    payload = {
+        "model": MODEL,
+        "messages": [{"role": "system", "content": system_prompt}] + messages,
+        "stream": False,
+    }
+    if format_json:
+        payload["format"] = "json"
+
+    resp = requests.post(OLLAMA_URL, json=payload, timeout=300)
+    resp.raise_for_status()
+    data = resp.json()
+
+    if "message" not in data or "content" not in data.get("message", {}):
+        raise RuntimeError(f"Ollama did not return message.content: {json.dumps(data)}")
+
+    return data["message"]["content"]
+
+
+# ------------------------------------------------------------------
+# Post-processing (identical to voice_chat.py)
+# ------------------------------------------------------------------
+
+def redistribute_trailing_emoji(text):
+    text = re.sub(
+        "([\U0001F300-\U0001FAFF\U00002600-\U000027BF])\u200d(?=[\U0001F300-\U0001FAFF\U00002600-\U000027BF])",
+        r"\1 ",
+        text,
+    )
+    emoji_pattern = re.compile(
+        "[\U0001F300-\U0001FAFF\U00002600-\U000027BF\U0001F1E6-\U0001F1FF\u200d\uFE0F]+"
+    )
+    single_emoji_pattern = re.compile(
+        "[\U0001F300-\U0001FAFF\U00002600-\U000027BF\U0001F1E6-\U0001F1FF]"
+    )
+    trailing_match = re.search(r"(\s*(?:" + emoji_pattern.pattern + r"\s*)+)$", text)
+    if not trailing_match:
+        return text
+    trailing_block = trailing_match.group(0)
+    emojis = single_emoji_pattern.findall(trailing_block)
+    if len(emojis) < 2:
+        return text
+    body = text[: trailing_match.start()].strip()
+    sentences = re.split(r"(?<=[.!?])\s+", body)
+    sentences = [s for s in sentences if s.strip()]
+    if not sentences:
+        return text
+    rebuilt = []
+    for i, sentence in enumerate(sentences):
+        if i < len(emojis):
+            m = re.match(r"^(.*?)([.!?]?)$", sentence)
+            core, punct = m.group(1), m.group(2)
+            sentence = f"{core} {emojis[i]}{punct}"
+        rebuilt.append(sentence)
+    return " ".join(rebuilt)
+
+
+def should_nudge_toward_doctor(turns):
+    scores = [t["distress_score"] for t in turns]
+    if len(scores) < 2:
+        return False
+    mid = len(scores) // 2
+    first_half = scores[:mid] or [scores[0]]
+    second_half = scores[mid:]
+    avg_first = sum(first_half) / len(first_half)
+    avg_second = sum(second_half) / len(second_half)
+    return (avg_second - avg_first) >= 1.5 or scores[-1] >= 6
+
+
+# ------------------------------------------------------------------
+# Report generation — takes DB turn rows, returns a report dict
+# (persistence and graph file writing are left to the caller)
+# ------------------------------------------------------------------
+
+def generate_report(db_turns):
+    transcript_for_model = [
+        {
+            "turn_index": t["turn_index"],
+            "text": t["text"],
+            "acoustic_features": json.loads(t["acoustic_features"]) if t["acoustic_features"] else {},
+            "arousal_label": t["arousal_label"],
+            "text_emotion": json.loads(t["text_emotion"]) if t["text_emotion"] else {},
+        }
+        for t in db_turns
+    ]
+    user_content = "Conversation turns:\n\n" + json.dumps(transcript_for_model, indent=2)
+
+    raw = call_ollama_chat(
+        [{"role": "user", "content": user_content}], REPORT_SYSTEM_PROMPT, format_json=True
+    )
+
+    cleaned = raw.strip()
+    if cleaned.startswith("```"):
+        cleaned = cleaned.strip("`")
+        if cleaned.startswith("json"):
+            cleaned = cleaned[4:]
+    result = json.loads(cleaned.strip())
+
+    result["patient_message"] = redistribute_trailing_emoji(result["patient_message"])
+
+    if should_nudge_toward_doctor(result["turns"]):
+        result["patient_message"] += " If this keeps building, it could help to flag it with your doctor too."
+
+    elapsed_by_index = {t["turn_index"]: t["elapsed_seconds"] for t in db_turns}
+    for turn in result["turns"]:
+        turn["elapsed_seconds"] = elapsed_by_index.get(turn["turn_index"], 0)
+
+    return result
+
+
+# ------------------------------------------------------------------
+# Text-to-speech (edge-tts — a network call to Microsoft's TTS service,
+# not local GPU work, so this does NOT need to go behind inference_lock
+# in main.py; it doesn't compete with Whisper/emotion/Ollama for the GPU)
+# ------------------------------------------------------------------
+
+EDGE_TTS_VOICE = "en-US-AriaNeural"
+
+
+async def synthesize_speech(text, out_path):
+    communicate = edge_tts.Communicate(text, EDGE_TTS_VOICE)
+    await communicate.save(out_path)
+
+
+def make_graph(turns, out_path):
+    xs = [t["elapsed_seconds"] for t in turns]
+    ys = [t["distress_score"] for t in turns]
+    plt.figure(figsize=(9, 4.5))
+    plt.plot(xs, ys, marker="o", linewidth=2)
+    plt.ylim(0, 10)
+    plt.xlabel("Time into session (s)")
+    plt.ylabel("Distress / stress indicator (0-10)")
+    plt.title("Session distress indicator over time")
+    plt.grid(alpha=0.3)
+    plt.tight_layout()
+    plt.savefig(out_path, dpi=150)
+    plt.close()
