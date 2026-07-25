@@ -1,6 +1,6 @@
-# Voice Emotion Module
+# Voice Chat / Acoustic Feature Module
 
-Extracts acoustic audio features (pitch, energy, dynamics) across conversation turns using signal processing algorithms.
+Extracts acoustic audio metrics (pitch, energy, spectral dynamics) across conversation segments using signal processing algorithms.
 
 ## DFD Level 0
 
@@ -13,6 +13,6 @@ Extracts acoustic audio features (pitch, energy, dynamics) across conversation t
 [ Output: output/transcript_with_emotion.json ]
 
 ## Overview
-- **Input:** Audio recording (`audio/test.wav`).
-- **Algorithm/Tool:** `Librosa` (heuristic signal processing algorithm for pitch, std, and energy).
+- **Input:** Raw audio file (`audio/test.wav`).
+- **Algorithm/Tool:** `Librosa` (heuristic signal processing algorithm for pitch, mean, std, and energy metrics).
 - **Output:** Structured JSON enriched with acoustic feature metrics per audio segment (`transcript_with_emotion.json`).
