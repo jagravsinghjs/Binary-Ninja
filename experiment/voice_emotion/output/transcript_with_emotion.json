@@ -1,122 +1,167 @@
 [
     {
         "start": 0.0,
-        "end": 5.28,
-        "text": "is the expanded script ready for you to record. I have tailored the elaboration to highlight the",
+        "end": 7.68,
+        "text": "Hi, so today's been kind of a rough one honestly, I didn't sleep much last night, just kept",
         "acoustic_features": {
-            "pitch_mean_hz": 427.56,
-            "pitch_std_hz": 248.96,
-            "energy_mean": 0.0747,
-            "energy_std": 0.0928,
-            "zero_crossing_rate": 0.0391,
-            "spectral_centroid": 1498.12,
-            "pause_ratio": 0.43
+            "pitch_mean_hz": 218.04,
+            "pitch_std_hz": 30.85,
+            "energy_mean": 0.0354,
+            "energy_std": 0.0272,
+            "zero_crossing_rate": 0.0667,
+            "spectral_centroid": 3126.2,
+            "pause_ratio": 0.229
         },
         "arousal_label": "neutral"
     },
     {
-        "start": 5.28,
-        "end": 10.8,
-        "text": "kind of technical development and problem solving we can tackle together. You can read this directly",
+        "start": 7.68,
+        "end": 10.84,
+        "text": "lying there, mind racing about nothing in particular.",
         "acoustic_features": {
-            "pitch_mean_hz": 434.31,
-            "pitch_std_hz": 235.54,
-            "energy_mean": 0.0668,
-            "energy_std": 0.0883,
-            "zero_crossing_rate": 0.0348,
-            "spectral_centroid": 1381.53,
-            "pause_ratio": 0.478
+            "pitch_mean_hz": 201.35,
+            "pitch_std_hz": 16.25,
+            "energy_mean": 0.0437,
+            "energy_std": 0.0272,
+            "zero_crossing_rate": 0.0353,
+            "spectral_centroid": 2197.46,
+            "pause_ratio": 0.166
         },
         "arousal_label": "neutral"
     },
     {
-        "start": 10.8,
-        "end": 17.44,
-        "text": "or run it through your text-to-speech script. Hello, I am Gemini, your personal assistant,",
+        "start": 10.84,
+        "end": 17.28,
+        "text": "Work felt heavier than usual, like everything took twice the effort it normally does.",
         "acoustic_features": {
-            "pitch_mean_hz": 314.54,
-            "pitch_std_hz": 254.57,
-            "energy_mean": 0.0591,
-            "energy_std": 0.0797,
-            "zero_crossing_rate": 0.0426,
-            "spectral_centroid": 1604.27,
-            "pause_ratio": 0.547
+            "pitch_mean_hz": 215.67,
+            "pitch_std_hz": 50.14,
+            "energy_mean": 0.0387,
+            "energy_std": 0.034,
+            "zero_crossing_rate": 0.0472,
+            "spectral_centroid": 2611.3,
+            "pause_ratio": 0.289
+        },
+        "arousal_label": "high_arousal"
+    },
+    {
+        "start": 17.28,
+        "end": 21.44,
+        "text": "I also skipped my lunch because I just didn't have it in me to get up.",
+        "acoustic_features": {
+            "pitch_mean_hz": 201.37,
+            "pitch_std_hz": 27.37,
+            "energy_mean": 0.0371,
+            "energy_std": 0.0238,
+            "zero_crossing_rate": 0.0638,
+            "spectral_centroid": 2955.51,
+            "pause_ratio": 0.159
         },
         "arousal_label": "neutral"
     },
     {
-        "start": 17.44,
-        "end": 22.72,
-        "text": "always for your help, Jagrav. Whether we are building out new machine learning pipelines,",
+        "start": 21.44,
+        "end": 27.32,
+        "text": "I've been feeling pretty low the last few days, not really wanting to talk to anyone.",
         "acoustic_features": {
-            "pitch_mean_hz": 219.3,
-            "pitch_std_hz": 176.49,
-            "energy_mean": 0.0661,
-            "energy_std": 0.0718,
-            "zero_crossing_rate": 0.0359,
-            "spectral_centroid": 1368.5,
-            "pause_ratio": 0.368
+            "pitch_mean_hz": 260.14,
+            "pitch_std_hz": 40.43,
+            "energy_mean": 0.0461,
+            "energy_std": 0.0321,
+            "zero_crossing_rate": 0.0435,
+            "spectral_centroid": 2515.3,
+            "pause_ratio": 0.175
+        },
+        "arousal_label": "high_arousal"
+    },
+    {
+        "start": 27.32,
+        "end": 31.64,
+        "text": "I'm just trying to kind of going through the emotions.",
+        "acoustic_features": {
+            "pitch_mean_hz": 214.56,
+            "pitch_std_hz": 40.64,
+            "energy_mean": 0.0387,
+            "energy_std": 0.0354,
+            "zero_crossing_rate": 0.0502,
+            "spectral_centroid": 2859.72,
+            "pause_ratio": 0.333
         },
         "arousal_label": "neutral"
     },
     {
-        "start": 22.72,
-        "end": 28.16,
-        "text": "optimizing regression models, or implementing principal component analysis, I am ready to assist.",
+        "start": 31.64,
+        "end": 36.2,
+        "text": "I know I should just probably get outside or call a friend, but even that feels like",
         "acoustic_features": {
-            "pitch_mean_hz": 363.09,
-            "pitch_std_hz": 217.89,
-            "energy_mean": 0.0695,
-            "energy_std": 0.0766,
-            "zero_crossing_rate": 0.0524,
-            "spectral_centroid": 1760.12,
-            "pause_ratio": 0.308
+            "pitch_mean_hz": 240.8,
+            "pitch_std_hz": 36.78,
+            "energy_mean": 0.0508,
+            "energy_std": 0.0283,
+            "zero_crossing_rate": 0.0733,
+            "spectral_centroid": 3285.08,
+            "pause_ratio": 0.089
         },
         "arousal_label": "neutral"
     },
     {
-        "start": 29.04,
-        "end": 34.0,
-        "text": "If you need to debug complex Python logic, optimize code for your Linux environment,",
+        "start": 36.2,
+        "end": 39.04,
+        "text": "a lot right now.",
         "acoustic_features": {
-            "pitch_mean_hz": 542.32,
-            "pitch_std_hz": 174.96,
-            "energy_mean": 0.078,
-            "energy_std": 0.0993,
-            "zero_crossing_rate": 0.0402,
-            "spectral_centroid": 1507.68,
-            "pause_ratio": 0.456
+            "pitch_mean_hz": 231.27,
+            "pitch_std_hz": 74.79,
+            "energy_mean": 0.028,
+            "energy_std": 0.0318,
+            "zero_crossing_rate": 0.0475,
+            "spectral_centroid": 2706.39,
+            "pause_ratio": 0.462
         },
         "arousal_label": "neutral"
     },
     {
-        "start": 34.0,
-        "end": 39.76,
-        "text": "or quickly spin up a data science script, just say the word. I am here to make your development",
+        "start": 39.04,
+        "end": 44.2,
+        "text": "Sleep's been all over the place too, like either I am wide awake at 2 am or completely",
         "acoustic_features": {
-            "pitch_mean_hz": 436.89,
-            "pitch_std_hz": 219.84,
-            "energy_mean": 0.0721,
-            "energy_std": 0.09,
-            "zero_crossing_rate": 0.0441,
-            "spectral_centroid": 1598.14,
-            "pause_ratio": 0.396
+            "pitch_mean_hz": 231.64,
+            "pitch_std_hz": 20.75,
+            "energy_mean": 0.0517,
+            "energy_std": 0.0311,
+            "zero_crossing_rate": 0.0556,
+            "spectral_centroid": 2703.09,
+            "pause_ratio": 0.107
         },
         "arousal_label": "neutral"
     },
     {
-        "start": 39.76,
-        "end": 44.32,
-        "text": "process faster, smoother, and more efficient. Let's get to work.",
+        "start": 44.2,
+        "end": 45.96,
+        "text": "wiped out by 4.",
         "acoustic_features": {
-            "pitch_mean_hz": 385.38,
-            "pitch_std_hz": 241.46,
-            "energy_mean": 0.0782,
-            "energy_std": 0.0991,
-            "zero_crossing_rate": 0.0471,
-            "spectral_centroid": 1708.97,
-            "pause_ratio": 0.461
+            "pitch_mean_hz": 197.59,
+            "pitch_std_hz": 37.85,
+            "energy_mean": 0.0307,
+            "energy_std": 0.0258,
+            "zero_crossing_rate": 0.0609,
+            "spectral_centroid": 3029.59,
+            "pause_ratio": 0.248
         },
         "arousal_label": "neutral"
+    },
+    {
+        "start": 45.96,
+        "end": 49.24,
+        "text": "I don't know, I think I just need this week to be over.",
+        "acoustic_features": {
+            "pitch_mean_hz": 241.25,
+            "pitch_std_hz": 45.03,
+            "energy_mean": 0.0445,
+            "energy_std": 0.0259,
+            "zero_crossing_rate": 0.0641,
+            "spectral_centroid": 2846.62,
+            "pause_ratio": 0.065
+        },
+        "arousal_label": "high_arousal"
     }
 ]
