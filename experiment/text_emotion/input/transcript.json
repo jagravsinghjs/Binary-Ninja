@@ -1,42 +1,57 @@
 [
     {
         "start": 0.0,
-        "end": 5.28,
-        "text": "is the expanded script ready for you to record. I have tailored the elaboration to highlight the"
+        "end": 7.68,
+        "text": "Hi, so today's been kind of a rough one honestly, I didn't sleep much last night, just kept"
     },
     {
-        "start": 5.28,
-        "end": 10.8,
-        "text": "kind of technical development and problem solving we can tackle together. You can read this directly"
+        "start": 7.68,
+        "end": 10.84,
+        "text": "lying there, mind racing about nothing in particular."
     },
     {
-        "start": 10.8,
-        "end": 17.44,
-        "text": "or run it through your text-to-speech script. Hello, I am Gemini, your personal assistant,"
+        "start": 10.84,
+        "end": 17.28,
+        "text": "Work felt heavier than usual, like everything took twice the effort it normally does."
     },
     {
-        "start": 17.44,
-        "end": 22.72,
-        "text": "always for your help, Jagrav. Whether we are building out new machine learning pipelines,"
+        "start": 17.28,
+        "end": 21.44,
+        "text": "I also skipped my lunch because I just didn't have it in me to get up."
     },
     {
-        "start": 22.72,
-        "end": 28.16,
-        "text": "optimizing regression models, or implementing principal component analysis, I am ready to assist."
+        "start": 21.44,
+        "end": 27.32,
+        "text": "I've been feeling pretty low the last few days, not really wanting to talk to anyone."
     },
     {
-        "start": 29.04,
-        "end": 34.0,
-        "text": "If you need to debug complex Python logic, optimize code for your Linux environment,"
+        "start": 27.32,
+        "end": 31.64,
+        "text": "I'm just trying to kind of going through the emotions."
     },
     {
-        "start": 34.0,
-        "end": 39.76,
-        "text": "or quickly spin up a data science script, just say the word. I am here to make your development"
+        "start": 31.64,
+        "end": 36.2,
+        "text": "I know I should just probably get outside or call a friend, but even that feels like"
     },
     {
-        "start": 39.76,
-        "end": 44.32,
-        "text": "process faster, smoother, and more efficient. Let's get to work."
+        "start": 36.2,
+        "end": 39.04,
+        "text": "a lot right now."
+    },
+    {
+        "start": 39.04,
+        "end": 44.2,
+        "text": "Sleep's been all over the place too, like either I am wide awake at 2 am or completely"
+    },
+    {
+        "start": 44.2,
+        "end": 45.96,
+        "text": "wiped out by 4."
+    },
+    {
+        "start": 45.96,
+        "end": 49.24,
+        "text": "I don't know, I think I just need this week to be over."
     }
 ]
