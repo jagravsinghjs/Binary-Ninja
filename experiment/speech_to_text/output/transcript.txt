@@ -1,8 +1,11 @@
-[0.00s - 5.28s] is the expanded script ready for you to record. I have tailored the elaboration to highlight the
-[5.28s - 10.80s] kind of technical development and problem solving we can tackle together. You can read this directly
-[10.80s - 17.44s] or run it through your text-to-speech script. Hello, I am Gemini, your personal assistant,
-[17.44s - 22.72s] always for your help, Jagrav. Whether we are building out new machine learning pipelines,
-[22.72s - 28.16s] optimizing regression models, or implementing principal component analysis, I am ready to assist.
-[29.04s - 34.00s] If you need to debug complex Python logic, optimize code for your Linux environment,
-[34.00s - 39.76s] or quickly spin up a data science script, just say the word. I am here to make your development
-[39.76s - 44.32s] process faster, smoother, and more efficient. Let's get to work.
+[0.00s - 7.68s] Hi, so today's been kind of a rough one honestly, I didn't sleep much last night, just kept
+[7.68s - 10.84s] lying there, mind racing about nothing in particular.
+[10.84s - 17.28s] Work felt heavier than usual, like everything took twice the effort it normally does.
+[17.28s - 21.44s] I also skipped my lunch because I just didn't have it in me to get up.
+[21.44s - 27.32s] I've been feeling pretty low the last few days, not really wanting to talk to anyone.
+[27.32s - 31.64s] I'm just trying to kind of going through the emotions.
+[31.64s - 36.20s] I know I should just probably get outside or call a friend, but even that feels like
+[36.20s - 39.04s] a lot right now.
+[39.04s - 44.20s] Sleep's been all over the place too, like either I am wide awake at 2 am or completely
+[44.20s - 45.96s] wiped out by 4.
+[45.96s - 49.24s] I don't know, I think I just need this week to be over.
