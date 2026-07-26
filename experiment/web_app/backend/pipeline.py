@@ -21,6 +21,14 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.lib import colors
+from reportlab.platypus import (
+    SimpleDocTemplate, Paragraph, Spacer, Image as RLImage, Table, TableStyle,
+)
+
 # librosa/audioread need a system `ffmpeg` on PATH to decode non-WAV formats
 # (like the browser's .webm uploads) — and it specifically has to be a file
 # literally named `ffmpeg`/`ffmpeg.exe`, found via shutil.which(). Prepending
@@ -424,3 +432,92 @@ def make_graph(turns, out_path):
     plt.tight_layout()
     plt.savefig(out_path, dpi=150)
     plt.close()
+
+
+# ------------------------------------------------------------------
+# PDF export — full session detail (transcript + distress timeline +
+# clinician summary + patient message) as a single downloadable file.
+# Not a doctor-portal feature: no new auth/roles, just an artifact the
+# patient can save or forward however they choose (e.g. email it to
+# their doctor themselves).
+# ------------------------------------------------------------------
+
+def generate_session_pdf(session, user_email, db_turns, report, out_path):
+    """session: dict from db.get_session (id, started_at, ended_at, status).
+    user_email: the owning patient's email, for a header line only.
+    db_turns: list of turn rows from db.get_turns (has the transcript text).
+    report: dict from db.get_report (clinician_summary, patient_message,
+            graph_path, turns=[{turn_index, distress_score, note, elapsed_seconds}])."""
+    styles = getSampleStyleSheet()
+    title_style = styles["Title"]
+    heading_style = styles["Heading2"]
+    body_style = ParagraphStyle(
+        "Body", parent=styles["Normal"], fontSize=10, leading=14, spaceAfter=8
+    )
+    small_style = ParagraphStyle(
+        "Small", parent=styles["Normal"], fontSize=8, leading=11, textColor=colors.grey
+    )
+
+    text_by_index = {t["turn_index"]: t["text"] for t in db_turns}
+
+    doc = SimpleDocTemplate(
+        out_path, pagesize=letter,
+        topMargin=0.6 * inch, bottomMargin=0.6 * inch,
+        leftMargin=0.7 * inch, rightMargin=0.7 * inch,
+    )
+    story = []
+
+    story.append(Paragraph("Setu Session Report", title_style))
+    story.append(Paragraph(
+        f"Patient: {user_email} &nbsp;&nbsp;|&nbsp;&nbsp; "
+        f"Session started: {session['started_at']} &nbsp;&nbsp;|&nbsp;&nbsp; "
+        f"Ended: {session.get('ended_at') or 'in progress'}",
+        small_style,
+    ))
+    story.append(Spacer(1, 0.2 * inch))
+
+    story.append(Paragraph(
+        "This is a decision-support artifact generated from a voice check-in between "
+        "doctor visits. It is not a diagnosis.",
+        small_style,
+    ))
+    story.append(Spacer(1, 0.15 * inch))
+
+    if report.get("graph_path") and os.path.exists(report["graph_path"]):
+        story.append(RLImage(report["graph_path"], width=6.5 * inch, height=3.25 * inch))
+        story.append(Spacer(1, 0.2 * inch))
+
+    story.append(Paragraph("Clinician Summary", heading_style))
+    story.append(Paragraph(report["clinician_summary"], body_style))
+    story.append(Spacer(1, 0.1 * inch))
+
+    story.append(Paragraph("Message Shown to Patient", heading_style))
+    story.append(Paragraph(report["patient_message"], body_style))
+    story.append(Spacer(1, 0.2 * inch))
+
+    story.append(Paragraph("Turn-by-Turn Detail", heading_style))
+    table_data = [["#", "Time (s)", "Distress", "What was said", "Note"]]
+    for t in sorted(report["turns"], key=lambda x: x["turn_index"]):
+        transcript = text_by_index.get(t["turn_index"], "")
+        if len(transcript) > 200:
+            transcript = transcript[:200] + "..."
+        table_data.append([
+            str(t["turn_index"]),
+            f"{t.get('elapsed_seconds', 0):.0f}",
+            str(t["distress_score"]),
+            Paragraph(transcript, body_style),
+            Paragraph(t.get("note", ""), body_style),
+        ])
+
+    table = Table(table_data, colWidths=[0.3 * inch, 0.6 * inch, 0.6 * inch, 3.2 * inch, 1.8 * inch])
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#2f6f5e")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("FONTSIZE", (0, 0), (-1, -1), 8),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#e5e3df")),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f6f5f3")]),
+    ]))
+    story.append(table)
+
+    doc.build(story)
