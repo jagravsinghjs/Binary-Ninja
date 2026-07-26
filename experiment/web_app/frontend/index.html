@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Setu — voice check-in</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, Segoe UI, Roboto, sans-serif; background: #f6f5f3; color: #222; }
+
+  #auth-screen { height: 100vh; display: flex; align-items: center; justify-content: center; }
+  #auth-card { background: #fff; border-radius: 12px; padding: 32px; width: 320px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+  #auth-card h1 { font-size: 18px; margin: 0 0 4px; }
+  #auth-card p { font-size: 13px; color: #888; margin: 0 0 20px; }
+  #auth-card input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+  #auth-card button { width: 100%; padding: 10px; background: #2f6f5e; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
+  #auth-toggle { text-align: center; font-size: 13px; margin-top: 12px; color: #2f6f5e; cursor: pointer; }
+  #auth-error { color: #c0483f; font-size: 13px; margin-top: 8px; min-height: 16px; }
+
+  #app { display: none; height: 100vh; }
+  #app.show { display: flex; }
+
+  #sidebar { width: 240px; background: #fff; border-right: 1px solid #e5e3df; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; }
+  #sidebar h1 { font-size: 16px; margin: 0 0 4px; }
+  #sidebar .email { font-size: 12px; color: #999; margin-bottom: 16px; }
+  #new-session-btn { width: 100%; padding: 8px; background: #2f6f5e; color: #fff; border: none; border-radius: 6px; cursor: pointer; margin-bottom: 16px; }
+  #session-list { flex: 1; overflow-y: auto; }
+  .session-item { padding: 8px; border-radius: 6px; cursor: pointer; font-size: 13px; margin-bottom: 4px; color: #555; }
+  .session-item:hover { background: #f0efec; }
+  .session-item.active { background: #e8f0ed; color: #2f6f5e; }
+  .session-item .status { font-size: 11px; opacity: 0.7; }
+  #logout-btn { font-size: 12px; color: #999; cursor: pointer; text-align: center; padding-top: 8px; }
+
+  #main { flex: 1; display: flex; flex-direction: column; }
+  #chat { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 12px; }
+  .msg { max-width: 60%; padding: 10px 14px; border-radius: 12px; line-height: 1.4; font-size: 14px; }
+  .msg.assistant { align-self: flex-start; background: #fff; border: 1px solid #e5e3df; }
+  .msg.user { align-self: flex-end; background: #2f6f5e; color: #fff; }
+  .msg.system { align-self: center; color: #888; font-size: 12px; }
+  .msg .play-btn { margin-left: 8px; cursor: pointer; opacity: 0.6; }
+
+  #controls { padding: 16px 24px; border-top: 1px solid #e5e3df; background: #fff; display: flex; gap: 12px; align-items: center; }
+  #mic-btn { width: 56px; height: 56px; border-radius: 50%; border: none; background: #2f6f5e; color: #fff; font-size: 20px; cursor: pointer; }
+  #mic-btn.recording { background: #c0483f; }
+  #mic-btn:disabled { background: #bbb; cursor: not-allowed; }
+  #status-text { font-size: 13px; color: #777; flex: 1; }
+  #end-btn { padding: 10px 16px; border-radius: 6px; border: 1px solid #c0483f; background: #fff; color: #c0483f; cursor: pointer; }
+  #end-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  #report-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; }
+  #report-overlay.show { display: flex; }
+  #report-card { background: #fff; border-radius: 12px; padding: 24px; width: 520px; max-height: 80vh; overflow-y: auto; }
+  #report-card h2 { margin-top: 0; }
+  #report-card img { width: 100%; border-radius: 8px; margin: 12px 0; }
+  #report-card .label { font-size: 12px; text-transform: uppercase; color: #999; margin-top: 16px; }
+  #close-report-btn { margin-top: 16px; padding: 8px 16px; border-radius: 6px; border: none; background: #2f6f5e; color: #fff; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<div id="backend-setup" style="display:none; position:fixed; inset:0; background:#f6f5f3; z-index:100; align-items:center; justify-content:center;">
+  <div style="background:#fff; border-radius:12px; padding:32px; width:360px; box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+    <h1 style="font-size:18px; margin:0 0 4px;">Connect to Setu</h1>
+    <p style="font-size:13px; color:#888; margin:0 0 20px;">Paste the backend URL you were given (e.g. a Cloudflare Tunnel link).</p>
+    <input id="backend-input" type="text" placeholder="https://something.trycloudflare.com"
+           style="width:100%; padding:10px; margin-bottom:10px; border:1px solid #ddd; border-radius:6px; font-size:14px; box-sizing:border-box;">
+    <button id="backend-save" style="width:100%; padding:10px; background:#2f6f5e; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:14px;">Connect</button>
+    <div id="backend-error" style="color:#c0483f; font-size:13px; margin-top:8px; min-height:16px;"></div>
+  </div>
+</div>
+
+<div id="auth-screen">
+  <div id="auth-card">
+    <h1 id="auth-title">Log in</h1>
+    <p>Setu — voice check-ins between doctor visits.</p>
+    <input id="auth-email" type="email" placeholder="Email">
+    <input id="auth-password" type="password" placeholder="Password">
+    <button id="auth-submit">Log in</button>
+    <div id="auth-error"></div>
+    <div id="auth-toggle">Don't have an account? Sign up</div>
+  </div>
+</div>
+
+<div id="app">
+  <div id="sidebar">
+    <h1>Setu check-ins</h1>
+    <div class="email" id="user-email"></div>
+    <button id="new-session-btn">+ New check-in</button>
+    <div id="session-list"></div>
+    <div id="logout-btn">Log out</div>
+    <div id="change-backend-btn" style="font-size:11px; color:#bbb; cursor:pointer; text-align:center; padding-top:4px;">change server</div>
+  </div>
+
+  <div id="main">
+    <div id="chat"></div>
+    <div id="controls">
+      <button id="mic-btn">●</button>
+      <span id="status-text">Start a new check-in to begin.</span>
+      <button id="end-btn" disabled>End &amp; generate report</button>
+    </div>
+  </div>
+</div>
+
+<div id="report-overlay">
+  <div id="report-card">
+    <h2>Session report</h2>
+    <img id="report-graph" src="" alt="Distress over time">
+    <div class="label">Clinician summary</div>
+    <p id="report-clinician"></p>
+    <div class="label">Message for you <span class="play-btn" id="report-play">🔊</span></div>
+    <p id="report-patient"></p>
+    <button id="export-pdf-btn" style="margin-top:16px; margin-right:8px; padding:8px 16px; border-radius:6px; border:1px solid #2f6f5e; background:#fff; color:#2f6f5e; cursor:pointer;">Export as PDF</button>
+    <button id="close-report-btn">Close</button>
+  </div>
+</div>
+
+<script>
+// ------------------------------------------------------------------
+// Backend URL — configurable so this HTML can be hosted anywhere
+// (e.g. a free static host) while the actual FastAPI server lives
+// behind a tunnel on the laptop with the GPU. Resolution order:
+//   1. ?backend=<url> in the page URL (also persists it for next time)
+//   2. whatever was saved in localStorage from a previous visit
+//   3. same-origin ("") — the old behavior, for local dev where the
+//      backend serves this file itself
+// ------------------------------------------------------------------
+function resolveBackend() {
+  const params = new URLSearchParams(location.search);
+  const fromParam = params.get("backend");
+  if (fromParam) {
+    const cleaned = fromParam.replace(/\/$/, "");
+    localStorage.setItem("setu_backend", cleaned);
+    return cleaned;
+  }
+  return localStorage.getItem("setu_backend") || "";
+}
+
+let API = resolveBackend();
+
+async function tryConnect(url) {
+  try {
+    const res = await fetch(`${url}/api/health`, {
+      cache: "no-store",
+      headers: { "ngrok-skip-browser-warning": "true" },
+    });
+    return res.ok;
+  } catch (e) {
+    return false;
+  }
+}
+
+async function ensureBackendConfigured() {
+  const banner = document.getElementById("backend-setup");
+  const input = document.getElementById("backend-input");
+  const error = document.getElementById("backend-error");
+
+  // Always actually test the current API value first — including "" (same
+  // origin), which is valid when this file is served by the FastAPI app
+  // itself rather than hosted separately behind a tunnel.
+  const ok = await tryConnect(API);
+  if (ok) {
+    banner.style.display = "none";
+    return true;
+  }
+
+  if (API) {
+    error.textContent = "Can't reach that backend right now — it may be offline, or the tunnel URL changed.";
+  }
+  banner.style.display = "flex";
+  input.value = API || "";
+  return false;
+}
+
+document.getElementById("backend-save").onclick = async () => {
+  const input = document.getElementById("backend-input");
+  const error = document.getElementById("backend-error");
+  const url = input.value.trim().replace(/\/$/, "");
+  if (!url) { error.textContent = "Enter the backend URL."; return; }
+  error.textContent = "Checking...";
+  const ok = await tryConnect(url);
+  if (!ok) { error.textContent = "Couldn't reach that URL — double check it and try again."; return; }
+  localStorage.setItem("setu_backend", url);
+  API = url;
+  document.getElementById("backend-setup").style.display = "none";
+  error.textContent = "";
+  if (authToken) enterApp();
+};
+
+// ------------------------------------------------------------------
+// Auth
+// ------------------------------------------------------------------
+
+let authToken = localStorage.getItem("setu_token");
+let userEmail = localStorage.getItem("setu_email");
+let authMode = "login"; // or "signup"
+
+function authHeaders() {
+  return {
+    "Authorization": "Bearer " + authToken,
+    "ngrok-skip-browser-warning": "true",
+  };
+}
+
+document.getElementById("auth-toggle").onclick = () => {
+  authMode = authMode === "login" ? "signup" : "login";
+  document.getElementById("auth-title").textContent = authMode === "login" ? "Log in" : "Sign up";
+  document.getElementById("auth-submit").textContent = authMode === "login" ? "Log in" : "Sign up";
+  document.getElementById("auth-toggle").textContent =
+    authMode === "login" ? "Don't have an account? Sign up" : "Already have an account? Log in";
+  document.getElementById("auth-error").textContent = "";
+};
+
+document.getElementById("auth-submit").onclick = async () => {
+  const email = document.getElementById("auth-email").value.trim();
+  const password = document.getElementById("auth-password").value;
+  const errorEl = document.getElementById("auth-error");
+  errorEl.textContent = "";
+
+  if (!email || !password) {
+    errorEl.textContent = "Enter an email and password.";
+    return;
+  }
+
+  const form = new FormData();
+  form.append("email", email);
+  form.append("password", password);
+
+  const res = await fetch(`${API}/api/auth/${authMode}`, {
+    method: "POST",
+    headers: { "ngrok-skip-browser-warning": "true" },
+    body: form,
+  });
+  const data = await res.json();
+
+  if (!res.ok) {
+    errorEl.textContent = data.detail || "Something went wrong.";
+    return;
+  }
+
+  authToken = data.token;
+  userEmail = data.email;
+  localStorage.setItem("setu_token", authToken);
+  localStorage.setItem("setu_email", userEmail);
+  enterApp();
+};
+
+document.getElementById("logout-btn").onclick = async () => {
+  await fetch(`${API}/api/auth/logout`, { method: "POST", headers: authHeaders() });
+  localStorage.removeItem("setu_token");
+  localStorage.removeItem("setu_email");
+  authToken = null;
+  location.reload();
+};
+
+document.getElementById("change-backend-btn").onclick = () => {
+  document.getElementById("backend-input").value = API;
+  document.getElementById("backend-setup").style.display = "flex";
+};
+
+function enterApp() {
+  document.getElementById("auth-screen").style.display = "none";
+  document.getElementById("app").classList.add("show");
+  document.getElementById("user-email").textContent = userEmail || "";
+  loadSessions();
+}
+
+// ------------------------------------------------------------------
+// App
+// ------------------------------------------------------------------
+
+let currentSessionId = null;
+let mediaRecorder = null;
+let recordedChunks = [];
+let isRecording = false;
+
+const chatEl = document.getElementById("chat");
+const sessionListEl = document.getElementById("session-list");
+const micBtn = document.getElementById("mic-btn");
+const endBtn = document.getElementById("end-btn");
+const statusText = document.getElementById("status-text");
+
+function addMessage(role, text, turnIndex) {
+  const div = document.createElement("div");
+  div.className = "msg " + role;
+  div.textContent = text;
+  if (role === "assistant" && turnIndex !== undefined) {
+    const play = document.createElement("span");
+    play.className = "play-btn";
+    play.textContent = "🔊";
+    play.onclick = () => playTurnAudio(turnIndex);
+    div.appendChild(play);
+  }
+  chatEl.appendChild(div);
+  chatEl.scrollTop = chatEl.scrollHeight;
+}
+
+function playTurnAudio(turnIndex) {
+  const audio = new Audio(`${API}/api/sessions/${currentSessionId}/turns/${turnIndex}/audio`);
+  // fetch with auth header, then play as a blob, since <audio src> can't send headers
+  fetch(`${API}/api/sessions/${currentSessionId}/turns/${turnIndex}/audio`, { headers: authHeaders() })
+    .then(res => res.blob())
+    .then(blob => new Audio(URL.createObjectURL(blob)).play());
+}
+
+async function handleResponse(res) {
+  if (res.status === 401) {
+    localStorage.removeItem("setu_token");
+    location.reload();
+    throw new Error("session expired");
+  }
+  if (res.status === 503) {
+    const data = await res.json().catch(() => ({}));
+    statusText.textContent = data.detail || "Setu is busy right now — try again shortly.";
+    throw new Error("busy");
+  }
+  return res;
+}
+
+async function loadSessions() {
+  const res = await fetch(`${API}/api/sessions`, { headers: authHeaders() });
+  await handleResponse(res);
+  const sessions = await res.json();
+  sessionListEl.innerHTML = "";
+  sessions.forEach(s => {
+    const item = document.createElement("div");
+    item.className = "session-item" + (s.id === currentSessionId ? " active" : "");
+    const date = new Date(s.started_at).toLocaleString();
+    item.innerHTML = `<div>${date}</div><div class="status">${s.status}</div>`;
+    item.onclick = () => openSession(s.id);
+    sessionListEl.appendChild(item);
+  });
+}
+
+async function openSession(sessionId) {
+  currentSessionId = sessionId;
+  const res = await fetch(`${API}/api/sessions/${sessionId}`, { headers: authHeaders() });
+  await handleResponse(res);
+  const session = await res.json();
+  chatEl.innerHTML = "";
+  addMessage("assistant", "Hey, how's it going? What's on your mind today?");
+  session.turns.forEach(t => {
+    addMessage("user", t.text);
+    if (t.assistant_reply) addMessage("assistant", t.assistant_reply, t.turn_index);
+  });
+  const active = session.status === "active";
+  micBtn.disabled = !active;
+  endBtn.disabled = !active || session.turns.length === 0;
+  statusText.textContent = active ? "Press the mic to speak." : "This session has ended.";
+  loadSessions();
+}
+
+document.getElementById("new-session-btn").onclick = async () => {
+  const res = await fetch(`${API}/api/sessions`, { method: "POST", headers: authHeaders() });
+  await handleResponse(res);
+  const data = await res.json();
+  currentSessionId = data.session_id;
+  chatEl.innerHTML = "";
+  addMessage("assistant", data.opener);
+  micBtn.disabled = false;
+  endBtn.disabled = true;
+  statusText.textContent = "Press the mic to speak.";
+  loadSessions();
+};
+
+micBtn.onclick = async () => {
+  if (!currentSessionId) return;
+
+  if (!isRecording) {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    recordedChunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
+    mediaRecorder.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop());
+      const blob = new Blob(recordedChunks, { type: "audio/webm" });
+      await sendTurn(blob);
+    };
+    mediaRecorder.start();
+    isRecording = true;
+    micBtn.classList.add("recording");
+    micBtn.textContent = "■";
+    statusText.textContent = "Recording... click again to stop.";
+  } else {
+    mediaRecorder.stop();
+    isRecording = false;
+    micBtn.classList.remove("recording");
+    micBtn.textContent = "●";
+    micBtn.disabled = true;
+    statusText.textContent = "Processing...";
+  }
+};
+
+async function sendTurn(blob) {
+  const form = new FormData();
+  form.append("audio", blob, "turn.webm");
+  let res;
+  try {
+    res = await fetch(`${API}/api/sessions/${currentSessionId}/turns`, {
+      method: "POST", headers: authHeaders(), body: form,
+    });
+    await handleResponse(res);
+  } catch (e) {
+    micBtn.disabled = false;
+    return;
+  }
+  micBtn.disabled = false;
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    statusText.textContent = err.detail || "Didn't catch that, try again.";
+    return;
+  }
+
+  const data = await res.json();
+  addMessage("user", data.text);
+  addMessage("assistant", data.assistant_reply, data.turn_index);
+  statusText.textContent = "Press the mic to speak.";
+  endBtn.disabled = false;
+}
+
+endBtn.onclick = async () => {
+  endBtn.disabled = true;
+  micBtn.disabled = true;
+  statusText.textContent = "Generating report...";
+  let res;
+  try {
+    res = await fetch(`${API}/api/sessions/${currentSessionId}/end`, {
+      method: "POST", headers: authHeaders(),
+    });
+    await handleResponse(res);
+  } catch (e) {
+    endBtn.disabled = false;
+    micBtn.disabled = false;
+    return;
+  }
+  const report = await res.json();
+  showReport(report);
+  statusText.textContent = "This session has ended.";
+  loadSessions();
+};
+
+function showReport(report) {
+  fetch(`${API}/api/sessions/${currentSessionId}/graph`, { headers: authHeaders() })
+    .then(res => res.blob())
+    .then(blob => { document.getElementById("report-graph").src = URL.createObjectURL(blob); });
+  document.getElementById("report-clinician").textContent = report.clinician_summary;
+  document.getElementById("report-patient").textContent = report.patient_message;
+  document.getElementById("report-overlay").classList.add("show");
+}
+
+document.getElementById("report-play").onclick = () => {
+  fetch(`${API}/api/sessions/${currentSessionId}/report-audio`, { headers: authHeaders() })
+    .then(res => res.blob())
+    .then(blob => new Audio(URL.createObjectURL(blob)).play());
+};
+
+document.getElementById("export-pdf-btn").onclick = async () => {
+  const btn = document.getElementById("export-pdf-btn");
+  const originalText = btn.textContent;
+  btn.textContent = "Preparing...";
+  btn.disabled = true;
+  try {
+    const res = await fetch(`${API}/api/sessions/${currentSessionId}/report-pdf`, { headers: authHeaders() });
+    await handleResponse(res);
+    if (!res.ok) throw new Error("export failed");
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `setu_session_${currentSessionId.slice(0, 8)}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    statusText.textContent = "Couldn't export the PDF — try again.";
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
+};
+
+document.getElementById("close-report-btn").onclick = () => {
+  document.getElementById("report-overlay").classList.remove("show");
+};
+
+// ------------------------------------------------------------------
+// Boot
+// ------------------------------------------------------------------
+
+(async () => {
+  const connected = await ensureBackendConfigured();
+  if (connected && authToken) {
+    enterApp();
+  }
+})();
+</script>
+</body>
+</html>
