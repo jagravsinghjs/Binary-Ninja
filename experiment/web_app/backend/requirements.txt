@@ -9,4 +9,5 @@ numpy
 requests
 matplotlib
 edge-tts
+imageio_ffmpeg
 reportlab
