@@ -1,0 +1,18 @@
+{
+    "turns": [
+        {
+            "turn_index": 0,
+            "distress_score": 2,
+            "note": "Neutral tone with a slight pause ratio, but no clear distress",
+            "elapsed_seconds": 35.1
+        },
+        {
+            "turn_index": 1,
+            "distress_score": 3,
+            "note": "Slightly higher pitch and energy variability, neutral emotion score",
+            "elapsed_seconds": 101.6
+        }
+    ],
+    "clinician_summary": "The patient appears relatively calm overall. They seem to be discussing some process involving translation into text for a model. While there are no clear signs of distress, the slight increase in pitch and energy during the second turn suggests they might be processing or explaining something complex.",
+    "patient_message": "Thanks for sharing about the translation process, \u1942\u1948 it sounds like you\u2019re managing things well. Keep up the good work!"
+}

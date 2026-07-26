@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+python-multipart
+faster-whisper
+transformers
+torch
+librosa
+numpy
+requests
+matplotlib
+edge-tts
+imageio_ffmpeg
+reportlab
