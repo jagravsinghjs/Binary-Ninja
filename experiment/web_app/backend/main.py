@@ -326,6 +326,25 @@ def get_graph(session_id: str, current_user: dict = Depends(get_current_user)):
     return FileResponse(report["graph_path"], media_type="image/png")
 
 
+@app.get("/api/sessions/{session_id}/report-pdf")
+def get_report_pdf(session_id: str, current_user: dict = Depends(get_current_user)):
+    session = _owned_session_or_404(session_id, current_user)
+    report = db.get_report(session_id)
+    if not report:
+        raise HTTPException(404, "no report for this session yet")
+
+    pdf_path = os.path.join(OUTPUT_DIR, f"{session_id}_report.pdf")
+    if not os.path.exists(pdf_path):
+        turns = db.get_turns(session_id)
+        pipeline.generate_session_pdf(session, current_user["email"], turns, report, pdf_path)
+
+    return FileResponse(
+        pdf_path,
+        media_type="application/pdf",
+        filename=f"setu_session_{session_id[:8]}.pdf",
+    )
+
+
 # ------------------------------------------------------------------
 # Static frontend (mounted last so /api/* takes priority)
 # ------------------------------------------------------------------
