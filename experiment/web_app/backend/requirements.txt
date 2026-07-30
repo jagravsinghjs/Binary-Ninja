@@ -11,3 +11,4 @@ matplotlib
 edge-tts
 imageio_ffmpeg
 reportlab
+pandas
