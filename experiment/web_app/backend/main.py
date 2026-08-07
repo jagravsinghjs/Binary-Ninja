@@ -26,6 +26,19 @@ v2 changes (moving from "one laptop, one demo user" to a public URL):
    local GPU work, so it doesn't compete with Whisper/Ollama for the GPU
    and serializing it would only add needless latency.
 
+v3 change — the actual "reports aren't saving" bug:
+   generate_report() calls a local 7B model and asks it to return strict
+   JSON. Small local models don't always comply — a truncated response, an
+   Ollama timeout, or a JSON parse failure would previously raise an
+   unhandled exception straight out of this route. FastAPI turns that into
+   a bare 500 with no usable body, db.save_report()/db.end_session() never
+   run, but the frontend didn't check response.ok either — so the person
+   just saw... nothing. No error, no report, session silently stuck.
+   Now: the whole report-generation block is wrapped, failures come back
+   as a clean HTTPException with a real message, and the session
+   deliberately stays "active" (not ended) on failure so a retry is safe
+   and turns are never lost.
+
 Raw audio: still never persisted — temp file per turn, deleted in a
 finally block, unchanged from v1.
 """
@@ -294,16 +307,30 @@ async def end_session(session_id: str, current_user: dict = Depends(get_current_
     if not turns:
         raise HTTPException(400, "no turns recorded yet")
 
-    result = await run_gpu_bound(pipeline.generate_report, turns)
+    # Everything from here on either fully succeeds (report generated,
+    # graph drawn, both saved, session marked ended) or fully fails with a
+    # real error message — no more silent partial failures. On failure the
+    # session is deliberately left "active" so the person can just press
+    # "End & generate report" again; their turns/transcript are untouched
+    # either way since none of this touches the turns table.
+    try:
+        result = await run_gpu_bound(pipeline.generate_report, turns)
 
-    graph_path = os.path.join(OUTPUT_DIR, f"{session_id}_mental_state.png")
-    pipeline.make_graph(result["turns"], graph_path)
+        graph_path = os.path.join(OUTPUT_DIR, f"{session_id}_mental_state.png")
+        pipeline.make_graph(result["turns"], graph_path)
 
-    db.save_report(
-        session_id, result["clinician_summary"], result["patient_message"], graph_path, _now()
-    )
-    db.save_report_segments(session_id, result["turns"])
-    db.end_session(session_id, _now())
+        db.save_report(
+            session_id, result["clinician_summary"], result["patient_message"],
+            graph_path, _now(),
+        )
+        db.save_report_segments(session_id, result["turns"])
+        db.end_session(session_id, _now())
+    except Exception as e:
+        raise HTTPException(
+            500,
+            f"Couldn't generate the report ({e}). Nothing was lost — your "
+            f"check-in is still here, try ending it again.",
+        )
 
     return db.get_report(session_id)
 
