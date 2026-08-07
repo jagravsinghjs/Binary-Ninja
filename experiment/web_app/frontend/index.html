@@ -2,96 +2,359 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Setu — voice check-in</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+  :root{
+    --ink:#1F4E42;
+    --ink-deep:#123A31;
+    --ivory:#FBF7F0;
+    --sand:#EFE7D8;
+    --sand-line:#E1D7C2;
+    --ochre:#C98A3D;
+    --clay:#B85C4F;
+    --paper:#FFFFFF;
+    --muted:#8A8477;
+    --text:#22201B;
+    --serif:'Fraunces', Georgia, serif;
+    --sans:'Inter', -apple-system, Segoe UI, Roboto, sans-serif;
+  }
   * { box-sizing: border-box; }
-  body { margin: 0; font-family: -apple-system, Segoe UI, Roboto, sans-serif; background: #f6f5f3; color: #222; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; font-family: var(--sans); background: var(--ivory); color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--ochre); color: #fff; }
+  button { font-family: inherit; }
+  button:focus-visible, input:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid var(--ochre); outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
 
-  #auth-screen { height: 100vh; display: flex; align-items: center; justify-content: center; }
-  #auth-card { background: #fff; border-radius: 12px; padding: 32px; width: 320px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
-  #auth-card h1 { font-size: 18px; margin: 0 0 4px; }
-  #auth-card p { font-size: 13px; color: #888; margin: 0 0 20px; }
-  #auth-card input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
-  #auth-card button { width: 100%; padding: 10px; background: #2f6f5e; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
-  #auth-toggle { text-align: center; font-size: 13px; margin-top: 12px; color: #2f6f5e; cursor: pointer; }
-  #auth-error { color: #c0483f; font-size: 13px; margin-top: 8px; min-height: 16px; }
+  /* ================= SPLASH ================= */
+  #splash {
+    position: fixed; inset: 0; z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(120% 120% at 50% 15%, #2C6B58 0%, #1F4E42 45%, #123A31 100%);
+    overflow: hidden;
+    transition: opacity 0.8s ease, visibility 0.8s ease;
+  }
+  #splash.fade-out { opacity: 0; visibility: hidden; pointer-events: none; }
+  #splash-content { position: relative; text-align: center; color: #fff; padding: 0 24px; }
+  #splash-arc {
+    width: min(560px, 80vw); height: auto; display: block; margin: 0 auto 8px;
+  }
+  #splash-arc path {
+    stroke-dasharray: 620;
+    stroke-dashoffset: 620;
+    animation: draw 1.6s cubic-bezier(.65,0,.35,1) forwards;
+  }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  #splash-title {
+    font-family: var(--serif); font-weight: 500; font-size: clamp(40px, 8vw, 64px);
+    letter-spacing: 0.01em; margin: 0; opacity: 0; transform: translateY(10px);
+    animation: rise 0.9s ease forwards; animation-delay: 1.15s;
+  }
+  #splash-tagline {
+    font-family: var(--serif); font-style: italic; font-weight: 400;
+    font-size: clamp(15px, 2.4vw, 19px); color: #D9E6DF; margin: 10px 0 0;
+    opacity: 0; transform: translateY(8px);
+    animation: rise 0.9s ease forwards; animation-delay: 1.5s;
+    letter-spacing: 0.01em;
+  }
+  @keyframes rise { to { opacity: 1; transform: translateY(0); } }
 
-  #app { display: none; height: 100vh; }
+  /* ================= AUTH ================= */
+  #auth-screen {
+    height: 100vh; display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+    background:
+      radial-gradient(60% 50% at 85% 8%, rgba(201,138,61,0.16) 0%, rgba(201,138,61,0) 70%),
+      radial-gradient(55% 45% at 8% 92%, rgba(31,78,66,0.14) 0%, rgba(31,78,66,0) 70%),
+      var(--ivory);
+    opacity: 0; animation: fadeIn 0.7s ease forwards; animation-delay: 0.1s;
+  }
+  @keyframes fadeIn { to { opacity: 1; } }
+  #auth-screen svg.bg-arc {
+    position: absolute; bottom: -8%; left: 50%; transform: translateX(-50%);
+    width: 130%; max-width: 1100px; opacity: 0.9; pointer-events: none;
+  }
+  #auth-card {
+    position: relative; background: var(--paper); border-radius: 20px;
+    padding: 40px 36px 34px; width: 360px;
+    box-shadow: 0 1px 2px rgba(18,58,49,0.06), 0 20px 48px -12px rgba(18,58,49,0.16);
+    border: 1px solid var(--sand-line);
+  }
+  #auth-eyebrow {
+    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--ochre); font-weight: 600; margin: 0 0 10px;
+  }
+  #auth-card h1 {
+    font-family: var(--serif); font-weight: 500; font-size: 26px; margin: 0 0 6px; color: var(--ink-deep);
+  }
+  #auth-card p.sub { font-size: 13.5px; color: var(--muted); margin: 0 0 24px; line-height: 1.5; }
+  .field-label {
+    display: block; font-size: 12px; font-weight: 600; color: var(--ink-deep);
+    margin: 0 0 6px; letter-spacing: 0.01em;
+  }
+  .field-group { margin-bottom: 16px; }
+  #auth-card input {
+    width: 100%; padding: 12px 14px; border: 1.5px solid var(--sand-line); border-radius: 10px;
+    font-size: 14.5px; background: var(--ivory); color: var(--text); transition: border-color 0.15s, background 0.15s;
+    font-family: var(--sans);
+  }
+  #auth-card input:focus { border-color: var(--ink); background: #fff; outline: none; }
+  #auth-card input::placeholder { color: #B4AEA0; }
+  #auth-submit {
+    width: 100%; padding: 13px; background: var(--ink); color: #fff; border: none;
+    border-radius: 10px; cursor: pointer; font-size: 14.5px; font-weight: 600;
+    margin-top: 6px; transition: background 0.15s, transform 0.1s;
+  }
+  #auth-submit:hover { background: var(--ink-deep); }
+  #auth-submit:active { transform: scale(0.98); }
+  #auth-toggle {
+    text-align: center; font-size: 13.5px; margin-top: 18px; color: var(--muted); cursor: pointer;
+  }
+  #auth-toggle span { color: var(--ink); font-weight: 600; }
+  #auth-toggle:hover span { text-decoration: underline; }
+  #auth-error { color: var(--clay); font-size: 13px; margin-top: 10px; min-height: 16px; }
+
+  /* ================= BACKEND SETUP ================= */
+  #backend-setup {
+    display:none; position:fixed; inset:0; z-index: 150; align-items:center; justify-content:center;
+    background: rgba(18,58,49,0.55); backdrop-filter: blur(3px);
+  }
+  #backend-setup .box {
+    background: var(--paper); border-radius: 16px; padding: 30px; width: 360px;
+    box-shadow: 0 20px 48px -12px rgba(18,58,49,0.3); border: 1px solid var(--sand-line);
+  }
+  #backend-setup h1 { font-family: var(--serif); font-size: 19px; margin: 0 0 6px; color: var(--ink-deep); font-weight: 500; }
+  #backend-setup p { font-size: 13px; color: var(--muted); margin: 0 0 18px; line-height: 1.5; }
+  #backend-input {
+    width:100%; padding:11px 13px; margin-bottom:10px; border:1.5px solid var(--sand-line);
+    border-radius:9px; font-size:14px; box-sizing:border-box; font-family: var(--sans);
+  }
+  #backend-save {
+    width:100%; padding:11px; background:var(--ink); color:#fff; border:none;
+    border-radius:9px; cursor:pointer; font-size:14px; font-weight: 600;
+  }
+  #backend-error { color:var(--clay); font-size:12.5px; margin-top:8px; min-height:16px; }
+
+  /* ================= APP SHELL ================= */
+  #app { display: none; height: 100vh; background: var(--ivory); }
   #app.show { display: flex; }
 
-  #sidebar { width: 240px; background: #fff; border-right: 1px solid #e5e3df; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; }
-  #sidebar h1 { font-size: 16px; margin: 0 0 4px; }
-  #sidebar .email { font-size: 12px; color: #999; margin-bottom: 16px; }
-  #new-session-btn { width: 100%; padding: 8px; background: #2f6f5e; color: #fff; border: none; border-radius: 6px; cursor: pointer; margin-bottom: 16px; }
+  #sidebar {
+    width: 264px; background: var(--paper); border-right: 1px solid var(--sand-line);
+    padding: 22px 18px; overflow-y: auto; display: flex; flex-direction: column;
+  }
+  #sidebar-brand { display: flex; align-items: baseline; gap: 8px; margin-bottom: 2px; }
+  #sidebar h1 { font-family: var(--serif); font-weight: 600; font-size: 19px; margin: 0; color: var(--ink-deep); }
+  #sidebar .email { font-size: 12px; color: var(--muted); margin-bottom: 20px; word-break: break-all; }
+  #new-session-btn {
+    width: 100%; padding: 11px; background: var(--ink); color: #fff; border: none;
+    border-radius: 10px; cursor: pointer; margin-bottom: 20px; font-size: 13.5px; font-weight: 600;
+    transition: background 0.15s;
+  }
+  #new-session-btn:hover { background: var(--ink-deep); }
+  #session-list-label {
+    font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+    font-weight: 600; margin-bottom: 10px;
+  }
   #session-list { flex: 1; overflow-y: auto; }
-  .session-item { padding: 8px; border-radius: 6px; cursor: pointer; font-size: 13px; margin-bottom: 4px; color: #555; }
-  .session-item:hover { background: #f0efec; }
-  .session-item.active { background: #e8f0ed; color: #2f6f5e; }
-  .session-item .status { font-size: 11px; opacity: 0.7; }
-  #logout-btn { font-size: 12px; color: #999; cursor: pointer; text-align: center; padding-top: 8px; }
+  .session-item {
+    padding: 10px 12px; border-radius: 10px; cursor: pointer; font-size: 13px; margin-bottom: 4px;
+    color: #4B473E; transition: background 0.12s; border: 1px solid transparent;
+  }
+  .session-item:hover { background: var(--ivory); }
+  .session-item.active { background: #EAF2EE; border-color: #D6E6DE; color: var(--ink-deep); }
+  .session-item .status {
+    font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.65; margin-top: 2px;
+  }
+  .session-item .status.ended::before { content: "● "; color: var(--muted); }
+  .session-item .status.active::before { content: "● "; color: var(--ochre); }
+  #logout-btn {
+    font-size: 12px; color: var(--muted); cursor: pointer; text-align: center; padding: 14px 0 4px;
+    border-top: 1px solid var(--sand-line); margin-top: 8px;
+  }
+  #logout-btn:hover { color: var(--clay); }
+  #change-backend-btn { font-size: 11px; color: #C7C1B3; cursor: pointer; text-align: center; padding-top: 6px; }
 
-  #main { flex: 1; display: flex; flex-direction: column; }
-  #chat { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 12px; }
-  .msg { max-width: 60%; padding: 10px 14px; border-radius: 12px; line-height: 1.4; font-size: 14px; }
-  .msg.assistant { align-self: flex-start; background: #fff; border: 1px solid #e5e3df; }
-  .msg.user { align-self: flex-end; background: #2f6f5e; color: #fff; }
-  .msg.system { align-self: center; color: #888; font-size: 12px; }
-  .msg .play-btn { margin-left: 8px; cursor: pointer; opacity: 0.6; }
+  #main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 
-  #controls { padding: 16px 24px; border-top: 1px solid #e5e3df; background: #fff; display: flex; gap: 12px; align-items: center; }
-  #mic-btn { width: 56px; height: 56px; border-radius: 50%; border: none; background: #2f6f5e; color: #fff; font-size: 20px; cursor: pointer; }
-  #mic-btn.recording { background: #c0483f; }
-  #mic-btn:disabled { background: #bbb; cursor: not-allowed; }
-  #status-text { font-size: 13px; color: #777; flex: 1; }
-  #end-btn { padding: 10px 16px; border-radius: 6px; border: 1px solid #c0483f; background: #fff; color: #c0483f; cursor: pointer; }
-  #end-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  #report-banner {
+    display: none; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 12px 24px; background: #F2EBDB; border-bottom: 1px solid var(--sand-line);
+    font-size: 13px; color: var(--ink-deep);
+  }
+  #report-banner.show { display: flex; }
+  #report-banner .txt strong { font-weight: 600; }
+  #report-banner button {
+    padding: 7px 14px; border-radius: 8px; border: 1px solid var(--ink); background: transparent;
+    color: var(--ink); cursor: pointer; font-size: 12.5px; font-weight: 600; white-space: nowrap;
+  }
+  #report-banner button:hover { background: var(--ink); color: #fff; }
 
-  #report-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; }
+  #chat {
+    flex: 1; overflow-y: auto; padding: 28px 32px; display: flex; flex-direction: column; gap: 14px;
+    max-width: 760px; width: 100%; margin: 0 auto;
+  }
+  #chat-empty {
+    margin: auto; text-align: center; color: var(--muted); max-width: 320px;
+  }
+  #chat-empty .glyph { font-family: var(--serif); font-size: 40px; color: var(--sand-line); margin-bottom: 10px; }
+  #chat-empty p { font-size: 13.5px; line-height: 1.6; margin: 0; }
+
+  .msg { max-width: 66%; padding: 12px 16px; border-radius: 16px; line-height: 1.5; font-size: 14.5px; }
+  .msg.assistant {
+    align-self: flex-start; background: var(--paper); border: 1px solid var(--sand-line);
+    border-bottom-left-radius: 4px; color: var(--text);
+  }
+  .msg.user {
+    align-self: flex-end; background: var(--ink); color: #fff; border-bottom-right-radius: 4px;
+  }
+  .msg.system { align-self: center; color: var(--muted); font-size: 12px; }
+  .msg .play-btn { margin-left: 8px; cursor: pointer; opacity: 0.55; transition: opacity 0.15s; }
+  .msg .play-btn:hover { opacity: 1; }
+
+  #controls {
+    padding: 18px 32px; border-top: 1px solid var(--sand-line); background: var(--paper);
+    display: flex; gap: 16px; align-items: center;
+  }
+  #mic-btn {
+    width: 54px; height: 54px; border-radius: 50%; border: none; background: var(--ink); color: #fff;
+    font-size: 17px; cursor: pointer; flex-shrink: 0; transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+    box-shadow: 0 0 0 0 rgba(184,92,79,0);
+  }
+  #mic-btn:hover:not(:disabled) { background: var(--ink-deep); }
+  #mic-btn:active:not(:disabled) { transform: scale(0.95); }
+  #mic-btn.recording { background: var(--clay); animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(184,92,79,0.35); }
+    50% { box-shadow: 0 0 0 10px rgba(184,92,79,0); }
+  }
+  #mic-btn:disabled { background: #D8D3C6; cursor: not-allowed; }
+  #status-text { font-size: 13px; color: var(--muted); flex: 1; }
+  #end-btn {
+    padding: 11px 18px; border-radius: 10px; border: 1.5px solid var(--clay); background: #fff;
+    color: var(--clay); cursor: pointer; font-size: 13.5px; font-weight: 600; transition: background 0.15s, color 0.15s;
+  }
+  #end-btn:hover:not(:disabled) { background: var(--clay); color: #fff; }
+  #end-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  /* ================= REPORT MODAL ================= */
+  #report-overlay {
+    position: fixed; inset: 0; background: rgba(18,58,49,0.5); backdrop-filter: blur(2px);
+    display: none; align-items: center; justify-content: center; z-index: 60; padding: 20px;
+  }
   #report-overlay.show { display: flex; }
-  #report-card { background: #fff; border-radius: 12px; padding: 24px; width: 520px; max-height: 80vh; overflow-y: auto; }
-  #report-card h2 { margin-top: 0; }
-  #report-card img { width: 100%; border-radius: 8px; margin: 12px 0; }
-  #report-card .label { font-size: 12px; text-transform: uppercase; color: #999; margin-top: 16px; }
-  #close-report-btn { margin-top: 16px; padding: 8px 16px; border-radius: 6px; border: none; background: #2f6f5e; color: #fff; cursor: pointer; }
+  #report-card {
+    background: var(--paper); border-radius: 18px; padding: 30px 30px 26px; width: 540px;
+    max-height: 84vh; overflow-y: auto; box-shadow: 0 24px 60px -12px rgba(18,58,49,0.35);
+  }
+  #report-card .eyebrow {
+    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ochre); font-weight: 600;
+  }
+  #report-card h2 {
+    font-family: var(--serif); font-weight: 500; margin: 4px 0 14px; color: var(--ink-deep); font-size: 23px;
+  }
+  #report-card img { width: 100%; border-radius: 12px; margin: 4px 0 14px; border: 1px solid var(--sand-line); }
+  #report-card .label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted);
+    margin-top: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px;
+  }
+  #report-card p { font-size: 14px; line-height: 1.65; color: var(--text); margin: 6px 0 0; }
+  #report-actions { display: flex; gap: 10px; margin-top: 22px; }
+  #export-pdf-btn {
+    padding: 10px 16px; border-radius: 9px; border: 1.5px solid var(--ink); background: #fff;
+    color: var(--ink); cursor: pointer; font-size: 13.5px; font-weight: 600;
+  }
+  #export-pdf-btn:hover { background: var(--ink); color: #fff; }
+  #close-report-btn {
+    padding: 10px 16px; border-radius: 9px; border: none; background: var(--sand);
+    color: var(--ink-deep); cursor: pointer; font-size: 13.5px; font-weight: 600;
+  }
+  #close-report-btn:hover { background: var(--sand-line); }
 </style>
 </head>
 <body>
 
-<div id="backend-setup" style="display:none; position:fixed; inset:0; background:#f6f5f3; z-index:100; align-items:center; justify-content:center;">
-  <div style="background:#fff; border-radius:12px; padding:32px; width:360px; box-shadow:0 2px 12px rgba(0,0,0,0.08);">
-    <h1 style="font-size:18px; margin:0 0 4px;">Connect to Setu</h1>
-    <p style="font-size:13px; color:#888; margin:0 0 20px;">Paste the backend URL you were given (e.g. a Cloudflare Tunnel link).</p>
-    <input id="backend-input" type="text" placeholder="https://something.trycloudflare.com"
-           style="width:100%; padding:10px; margin-bottom:10px; border:1px solid #ddd; border-radius:6px; font-size:14px; box-sizing:border-box;">
-    <button id="backend-save" style="width:100%; padding:10px; background:#2f6f5e; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:14px;">Connect</button>
-    <div id="backend-error" style="color:#c0483f; font-size:13px; margin-top:8px; min-height:16px;"></div>
+<!-- ================= SPLASH ================= -->
+<div id="splash">
+  <div id="splash-content">
+    <svg id="splash-arc" viewBox="0 0 560 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M10 130 C 10 40, 550 40, 550 130" stroke="#D9E6DF" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <h1 id="splash-title">Setu</h1>
+    <p id="splash-tagline">Because life happens between visits.</p>
   </div>
 </div>
 
+<!-- ================= BACKEND SETUP ================= -->
+<div id="backend-setup">
+  <div class="box">
+    <h1>Connect to Setu</h1>
+    <p>Paste the backend URL you were given (e.g. a Cloudflare Tunnel link).</p>
+    <input id="backend-input" type="text" placeholder="https://something.trycloudflare.com">
+    <button id="backend-save">Connect</button>
+    <div id="backend-error"></div>
+  </div>
+</div>
+
+<!-- ================= AUTH ================= -->
 <div id="auth-screen">
+  <svg class="bg-arc" viewBox="0 0 1100 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M20 210 C 20 30, 1080 30, 1080 210" stroke="#E1D7C2" stroke-width="1.5"/>
+  </svg>
   <div id="auth-card">
-    <h1 id="auth-title">Log in</h1>
-    <p>Setu — voice check-ins between doctor visits.</p>
-    <input id="auth-email" type="email" placeholder="Email">
-    <input id="auth-password" type="password" placeholder="Password">
+    <div id="auth-eyebrow">Setu · voice check-ins</div>
+    <h1 id="auth-title">Welcome back</h1>
+    <p class="sub">A quiet space to check in, between doctor visits.</p>
+    <div class="field-group">
+      <label class="field-label">Email</label>
+      <input id="auth-email" type="email" placeholder="you@example.com">
+    </div>
+    <div class="field-group">
+      <label class="field-label">Password</label>
+      <input id="auth-password" type="password" placeholder="••••••••">
+    </div>
     <button id="auth-submit">Log in</button>
     <div id="auth-error"></div>
-    <div id="auth-toggle">Don't have an account? Sign up</div>
+    <div id="auth-toggle">Don't have an account? <span>Sign up</span></div>
   </div>
 </div>
 
+<!-- ================= APP ================= -->
 <div id="app">
   <div id="sidebar">
-    <h1>Setu check-ins</h1>
+    <div id="sidebar-brand">
+      <h1>Setu</h1>
+    </div>
     <div class="email" id="user-email"></div>
     <button id="new-session-btn">+ New check-in</button>
+    <div id="session-list-label">Your check-ins</div>
     <div id="session-list"></div>
     <div id="logout-btn">Log out</div>
-    <div id="change-backend-btn" style="font-size:11px; color:#bbb; cursor:pointer; text-align:center; padding-top:4px;">change server</div>
+    <div id="change-backend-btn">change server</div>
   </div>
 
   <div id="main">
-    <div id="chat"></div>
+    <div id="report-banner">
+      <div class="txt">This check-in has ended — <strong>your report is saved.</strong></div>
+      <button id="view-saved-report-btn">View report</button>
+    </div>
+    <div id="chat">
+      <div id="chat-empty">
+        <div class="glyph">Setu</div>
+        <p>Start a new check-in, or open a past one from the sidebar.</p>
+      </div>
+    </div>
     <div id="controls">
       <button id="mic-btn">●</button>
       <span id="status-text">Start a new check-in to begin.</span>
@@ -102,18 +365,30 @@
 
 <div id="report-overlay">
   <div id="report-card">
-    <h2>Session report</h2>
+    <div class="eyebrow">Session report</div>
+    <h2>How this check-in went</h2>
     <img id="report-graph" src="" alt="Distress over time">
     <div class="label">Clinician summary</div>
     <p id="report-clinician"></p>
-    <div class="label">Message for you <span class="play-btn" id="report-play">🔊</span></div>
+    <div class="label">Message for you <span class="play-btn" id="report-play" style="cursor:pointer;">🔊</span></div>
     <p id="report-patient"></p>
-    <button id="export-pdf-btn" style="margin-top:16px; margin-right:8px; padding:8px 16px; border-radius:6px; border:1px solid #2f6f5e; background:#fff; color:#2f6f5e; cursor:pointer;">Export as PDF</button>
-    <button id="close-report-btn">Close</button>
+    <div id="report-actions">
+      <button id="export-pdf-btn">Export as PDF</button>
+      <button id="close-report-btn">Close</button>
+    </div>
   </div>
 </div>
 
 <script>
+// ------------------------------------------------------------------
+// Splash — plays once per browser tab load, then hands off to auth.
+// ------------------------------------------------------------------
+window.addEventListener("load", () => {
+  setTimeout(() => {
+    document.getElementById("splash").classList.add("fade-out");
+  }, 2600);
+});
+
 // ------------------------------------------------------------------
 // Backend URL — configurable so this HTML can be hosted anywhere
 // (e.g. a free static host) while the actual FastAPI server lives
@@ -153,9 +428,6 @@ async function ensureBackendConfigured() {
   const input = document.getElementById("backend-input");
   const error = document.getElementById("backend-error");
 
-  // Always actually test the current API value first — including "" (same
-  // origin), which is valid when this file is served by the FastAPI app
-  // itself rather than hosted separately behind a tunnel.
   const ok = await tryConnect(API);
   if (ok) {
     banner.style.display = "none";
@@ -202,10 +474,10 @@ function authHeaders() {
 
 document.getElementById("auth-toggle").onclick = () => {
   authMode = authMode === "login" ? "signup" : "login";
-  document.getElementById("auth-title").textContent = authMode === "login" ? "Log in" : "Sign up";
+  document.getElementById("auth-title").textContent = authMode === "login" ? "Welcome back" : "Create your account";
   document.getElementById("auth-submit").textContent = authMode === "login" ? "Log in" : "Sign up";
-  document.getElementById("auth-toggle").textContent =
-    authMode === "login" ? "Don't have an account? Sign up" : "Already have an account? Log in";
+  document.getElementById("auth-toggle").innerHTML =
+    authMode === "login" ? "Don't have an account? <span>Sign up</span>" : "Already have an account? <span>Log in</span>";
   document.getElementById("auth-error").textContent = "";
 };
 
@@ -268,6 +540,7 @@ function enterApp() {
 // ------------------------------------------------------------------
 
 let currentSessionId = null;
+let currentSessionStatus = null;
 let mediaRecorder = null;
 let recordedChunks = [];
 let isRecording = false;
@@ -277,8 +550,15 @@ const sessionListEl = document.getElementById("session-list");
 const micBtn = document.getElementById("mic-btn");
 const endBtn = document.getElementById("end-btn");
 const statusText = document.getElementById("status-text");
+const reportBanner = document.getElementById("report-banner");
+
+function clearChat() {
+  chatEl.innerHTML = "";
+}
 
 function addMessage(role, text, turnIndex) {
+  const empty = document.getElementById("chat-empty");
+  if (empty) empty.remove();
   const div = document.createElement("div");
   div.className = "msg " + role;
   div.textContent = text;
@@ -294,8 +574,6 @@ function addMessage(role, text, turnIndex) {
 }
 
 function playTurnAudio(turnIndex) {
-  const audio = new Audio(`${API}/api/sessions/${currentSessionId}/turns/${turnIndex}/audio`);
-  // fetch with auth header, then play as a blob, since <audio src> can't send headers
   fetch(`${API}/api/sessions/${currentSessionId}/turns/${turnIndex}/audio`, { headers: authHeaders() })
     .then(res => res.blob())
     .then(blob => new Audio(URL.createObjectURL(blob)).play());
@@ -323,8 +601,10 @@ async function loadSessions() {
   sessions.forEach(s => {
     const item = document.createElement("div");
     item.className = "session-item" + (s.id === currentSessionId ? " active" : "");
-    const date = new Date(s.started_at).toLocaleString();
-    item.innerHTML = `<div>${date}</div><div class="status">${s.status}</div>`;
+    const date = new Date(s.started_at).toLocaleString(undefined, {
+      month: "short", day: "numeric", hour: "numeric", minute: "2-digit"
+    });
+    item.innerHTML = `<div>${date}</div><div class="status ${s.status}">${s.status}</div>`;
     item.onclick = () => openSession(s.id);
     sessionListEl.appendChild(item);
   });
@@ -335,7 +615,8 @@ async function openSession(sessionId) {
   const res = await fetch(`${API}/api/sessions/${sessionId}`, { headers: authHeaders() });
   await handleResponse(res);
   const session = await res.json();
-  chatEl.innerHTML = "";
+  currentSessionStatus = session.status;
+  clearChat();
   addMessage("assistant", "Hey, how's it going? What's on your mind today?");
   session.turns.forEach(t => {
     addMessage("user", t.text);
@@ -344,7 +625,22 @@ async function openSession(sessionId) {
   const active = session.status === "active";
   micBtn.disabled = !active;
   endBtn.disabled = !active || session.turns.length === 0;
-  statusText.textContent = active ? "Press the mic to speak." : "This session has ended.";
+  statusText.textContent = active ? "Press the mic to speak." : "This check-in has ended.";
+
+  // Fixed: previously, reopening a past (ended) session never surfaced its
+  // saved report — it only replayed the transcript. The report WAS saved
+  // by the backend all along; it just wasn't shown again here. Now we
+  // check for it and offer it via a banner + on-demand modal.
+  reportBanner.classList.remove("show");
+  if (!active) {
+    const reportRes = await fetch(`${API}/api/sessions/${sessionId}/report`, { headers: authHeaders() });
+    if (reportRes.ok) {
+      const report = await reportRes.json();
+      reportBanner.classList.add("show");
+      document.getElementById("view-saved-report-btn").onclick = () => showReport(report);
+    }
+  }
+
   loadSessions();
 }
 
@@ -353,11 +649,13 @@ document.getElementById("new-session-btn").onclick = async () => {
   await handleResponse(res);
   const data = await res.json();
   currentSessionId = data.session_id;
-  chatEl.innerHTML = "";
+  currentSessionStatus = "active";
+  clearChat();
   addMessage("assistant", data.opener);
   micBtn.disabled = false;
   endBtn.disabled = true;
   statusText.textContent = "Press the mic to speak.";
+  reportBanner.classList.remove("show");
   loadSessions();
 };
 
@@ -434,7 +732,9 @@ endBtn.onclick = async () => {
   }
   const report = await res.json();
   showReport(report);
-  statusText.textContent = "This session has ended.";
+  statusText.textContent = "This check-in has ended.";
+  reportBanner.classList.add("show");
+  document.getElementById("view-saved-report-btn").onclick = () => showReport(report);
   loadSessions();
 };
 
