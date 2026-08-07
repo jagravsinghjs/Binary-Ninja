@@ -5,6 +5,18 @@ emotion -> Ollama), refactored so the FastAPI backend can call it per-request
 instead of holding conversation state in a global python list. Conversation
 history is rebuilt from whatever's in SQLite for that session_id, which is
 what makes this safe across multiple concurrent users/sessions.
+
+v2 change — generate_report() robustness:
+qwen2.5:7b-instruct is a small local model, and even with format_json=True
+it doesn't always return clean JSON — a truncated response, stray text
+wrapped around the object, or an outright malformed reply all used to blow
+up generate_report() with an unhandled exception, which (before main.py's
+matching fix) meant the report silently never got saved. Now: one retry
+with a stricter reminder if the first parse fails, a salvage pass that
+extracts the {...} substring if the model added preamble/fences despite
+being told not to, and a check that the required keys are actually present
+before handing the result back — so a genuine failure raises one clear,
+readable error instead of a confusing downstream KeyError.
 """
 
 import json
@@ -104,6 +116,18 @@ Your job:
    Never mention "doctor" or "appointment" in this message — handled separately.
 
 Return ONLY valid JSON, no markdown fences, no preamble, in exactly this shape:
+{
+  "turns": [
+    {"turn_index": <int>, "distress_score": <int 0-10>, "note": "<short phrase why>"}
+  ],
+  "clinician_summary": "<string>",
+  "patient_message": "<string>"
+}
+"""
+
+REPORT_RETRY_REMINDER = """Your previous reply could not be parsed as JSON. Return ONLY the JSON
+object described below — no markdown code fences, no preamble, no trailing commentary, nothing
+before the opening brace or after the closing brace:
 {
   "turns": [
     {"turn_index": <int>, "distress_score": <int 0-10>, "note": "<short phrase why>"}
@@ -355,6 +379,54 @@ def should_nudge_toward_doctor(turns):
 # (persistence and graph file writing are left to the caller)
 # ------------------------------------------------------------------
 
+def _extract_json_object(raw):
+    """Best-effort salvage for when the model wraps the JSON in markdown
+    fences or stray commentary despite format_json=True and being told not
+    to. Strips ``` fences if present, then — if the whole string still
+    doesn't parse — falls back to the substring between the first '{' and
+    the last '}'."""
+    cleaned = raw.strip()
+    if cleaned.startswith("```"):
+        cleaned = cleaned.strip("`")
+        if cleaned.startswith("json"):
+            cleaned = cleaned[4:]
+    cleaned = cleaned.strip()
+
+    try:
+        return json.loads(cleaned)
+    except json.JSONDecodeError:
+        pass
+
+    start = cleaned.find("{")
+    end = cleaned.rfind("}")
+    if start != -1 and end != -1 and end > start:
+        candidate = cleaned[start : end + 1]
+        return json.loads(candidate)  # let this raise if it's still bad
+
+    raise json.JSONDecodeError("No JSON object found in model output", cleaned, 0)
+
+
+def _parse_report_json(raw):
+    if not raw.strip():
+        raise RuntimeError(
+            "Ollama returned an empty response — likely a timeout or the "
+            "model erroring mid-generation."
+        )
+    result = _extract_json_object(raw)  # may raise json.JSONDecodeError
+
+    required = {"turns", "clinician_summary", "patient_message"}
+    missing = required - result.keys()
+    if missing:
+        raise RuntimeError(f"Model's JSON was missing required field(s): {', '.join(missing)}")
+    if not isinstance(result["turns"], list) or not result["turns"]:
+        raise RuntimeError("Model's JSON had an empty or invalid 'turns' list")
+    for t in result["turns"]:
+        if "turn_index" not in t or "distress_score" not in t:
+            raise RuntimeError("Model's JSON had a turn missing 'turn_index' or 'distress_score'")
+
+    return result
+
+
 def generate_report(db_turns):
     transcript_for_model = [
         {
@@ -367,31 +439,34 @@ def generate_report(db_turns):
         for t in db_turns
     ]
     user_content = "Conversation turns:\n\n" + json.dumps(transcript_for_model, indent=2)
+    messages = [{"role": "user", "content": user_content}]
 
-    raw = call_ollama_chat(
-        [{"role": "user", "content": user_content}], REPORT_SYSTEM_PROMPT, format_json=True
-    )
-
-    if not raw.strip():
-        raise RuntimeError(
-            "Ollama returned an empty response generating the report — likely a timeout "
-            "or the model erroring mid-generation. Try ending the session again."
-        )
-
-    cleaned = raw.strip()
-    if cleaned.startswith("```"):
-        cleaned = cleaned.strip("`")
-        if cleaned.startswith("json"):
-            cleaned = cleaned[4:]
-    cleaned = cleaned.strip()
-
-    try:
-        result = json.loads(cleaned)
-    except json.JSONDecodeError:
-        debug_path = os.path.join(tempfile.gettempdir(), "setu_last_raw_response.txt")
-        with open(debug_path, "w") as f:
-            f.write(raw)
-        raise RuntimeError(f"Ollama's report output wasn't valid JSON — raw output saved to {debug_path}")
+    # Small local models occasionally don't produce clean JSON on the first
+    # try. One retry with a stricter reminder — appended as the model's own
+    # prior turn plus a follow-up instruction — resolves most of these
+    # without the person ever seeing a failure.
+    last_error = None
+    raw = None
+    for attempt in range(2):
+        try:
+            raw = call_ollama_chat(messages, REPORT_SYSTEM_PROMPT, format_json=True)
+            result = _parse_report_json(raw)
+            break
+        except (json.JSONDecodeError, RuntimeError) as e:
+            last_error = e
+            if attempt == 0:
+                messages = messages + [
+                    {"role": "assistant", "content": raw or ""},
+                    {"role": "user", "content": REPORT_RETRY_REMINDER},
+                ]
+                continue
+            debug_path = os.path.join(tempfile.gettempdir(), "setu_last_raw_response.txt")
+            with open(debug_path, "w") as f:
+                f.write(raw or "")
+            raise RuntimeError(
+                f"Ollama's report output wasn't usable after a retry ({last_error}) — "
+                f"raw output saved to {debug_path}"
+            )
 
     result["patient_message"] = redistribute_trailing_emoji(result["patient_message"])
 
