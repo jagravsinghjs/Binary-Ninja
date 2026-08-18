@@ -1,0 +1,20 @@
+## Algorithm 2: Acoustic Feature Extraction (`voice_emotion.py`)
+
+**Input:** Audio file (`.wav`), `transcript.json`
+**Output:** `transcript_with_emotion.json` (acoustic features + arousal label per segment)
+
+1. Load audio waveform `y` at native sample rate `sr` using `librosa`
+2. For each segment in transcript:
+   - `seg ← y[start·sr : end·sr]`
+   - If `seg` is empty → skip segment
+   - Estimate pitch contour `f0` via `librosa.pyin` (range 75–450 Hz)
+   - Remove octave-jump outliers from `f0` using median-based filtering
+   - Compute `pitch_mean`, `pitch_std` from cleaned `f0`
+   - Compute RMS energy → `energy_mean`, `energy_std`
+   - Compute zero-crossing rate and spectral centroid
+   - Compute `pause_ratio` from voiced/silent interval split (top_db = 25)
+   - **If** `pitch_std > 40` **and** `energy_std > 0.02` → `arousal ← high_arousal`
+   - **Else if** `pause_ratio > 0.3` → `arousal ← low_arousal`
+   - **Else** → `arousal ← neutral`
+   - Attach features and `arousal` label to segment
+3. Save enriched segments as `transcript_with_emotion.json`
